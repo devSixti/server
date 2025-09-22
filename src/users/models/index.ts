@@ -1,0 +1,11 @@
+export { PaymentMethodModel } from './payment_methods.model';
+export { TransactionModel } from './transsactions.model';
+export { WalletModel } from './wallet.model';
+export  { RoleModel } from './role.model';
+export { CalificationsModel } from './califications.model';
+export { DeviceModel } from './devices.model';
+export { DriverModel } from "./driver.model";
+export { UserModel } from "./user.model";
+export { DiscountModel } from "./discounts.model";
+export { VehicleModel } from "./vehicles.model";
+

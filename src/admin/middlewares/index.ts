@@ -1,0 +1,1 @@
+export { checkAdmin } from "./check.admin.middleware";

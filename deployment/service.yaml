@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: xisti-server-service
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'  
+spec:
+  selector:
+    app: xisti-server
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80    
+      targetPort: 3015
+      name: http
+    # - protocol: TCP
+    #   port: 443
+    #   targetPort: 3015
+    #   name: https

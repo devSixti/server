@@ -1,0 +1,1 @@
+export * as tripsController from "./trips.controller";

@@ -1,0 +1,32 @@
+import express from "express";
+import { isAuth, limiter } from "./common/middlewares";
+import { accessRoutes, discountRoutes, driversRoutes, walletRoutes } from "./users/routes";
+import adminRoutes from "./admin/routes/admin.routes";
+import commonRoutes from "./common/routes/health.routes";
+import { tripsRoutes } from "./trips/routes";
+import { checkDriver } from "./trips/middlewares";
+import webhookRoutes from "./common/routes/webhook.routes";
+
+const app = express();
+app.use(express.json());
+
+app.set("trust proxy", 1);
+
+app.use("/access", accessRoutes);
+app.use("/discounts", discountRoutes);
+app.use("/drivers", isAuth, driversRoutes);
+app.use("/wallet", isAuth, checkDriver, walletRoutes);
+app.use("/trips", isAuth, tripsRoutes);
+app.use("/admin", adminRoutes);
+app.use("/webhook", webhookRoutes);
+
+
+
+app.use("/health", limiter, commonRoutes);
+
+// app.use('/users', limiter ,userRouter)
+// app.use('/driver', limiter ,driverRouter)
+// app.use('/validate', limiter ,validationRouter)
+// app.use('/travel', limiter ,travelsRouter)
+
+export default app;

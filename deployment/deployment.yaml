@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xisti-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xisti-server
+  template:
+    metadata:
+      labels:
+        app: xisti-server
+    spec:
+      containers:
+      - name: xisti-server
+        image: gcr.io/xisti-services/xisti:legacy
+        ports:
+        - containerPort: 3015
+        envFrom:
+        - secretRef:
+            name: xisti-secret
+        readinessProbe:  
+          httpGet:
+            path: /api/health/
+            port: 3015
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/health/
+            port: 3015
+          initialDelaySeconds: 15
+          periodSeconds: 20
+#       resources:
+#         #   requests:
+#         #     memory: "256Mi"  # Ajusta según las necesidades de tu aplicación
+#         #     cpu: "500m"      # Ajusta según las necesidades de tu aplicación
+#         #   limits:
+#         #     memory: "512Mi"  # Ajusta según las necesidades de tu aplicación
+#         #     cpu: "1"         # Ajusta según las necesidades de tu aplicación

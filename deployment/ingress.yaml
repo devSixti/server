@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xisti-server-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "500"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "500"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "500"
+    kubernetes.io/ingress.global-static-ip-name: custom-static-ip
+    # networking.gke.io/managed-certificates: xisti-tls-certificate
+spec:
+  rules:
+    - host: xi.xistiapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: xisti-server-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - xi.xistiapp.com
+      secretName: xisti-tls-secret

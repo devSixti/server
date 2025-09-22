@@ -1,0 +1,9 @@
+/.vscode
+/deployment
+/dist
+/node_modules
+/dockerfile
+README.md
+
+/coverage
+/test
