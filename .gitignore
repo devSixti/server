@@ -8,4 +8,4 @@ tls.crt
 tls.key
 firebase-admin.json
 cabundle.crt
-fullchain.crt
+fullchain.crtsrc/common/keys/firebase.services.json
