@@ -5,13 +5,17 @@ interface AuthPayload {
     id?: string
 }
 
+/**
+ * Genera un token JWT a partir de un payload.
+ *  */
+
 export const generateJWT = async (payload: AuthPayload, expiresIn: number | undefined = undefined) => {
 
     try {
         const { jwt_secret: secrets } = envValues;
 
         if (!secrets) {
-            throw new Error("The environment variable SECRETKEY is not defined");
+            throw new Error("La variable de entorno SECRETKEY no está definida");
         }
 
         const options = expiresIn ? { expiresIn } : {};
@@ -21,7 +25,7 @@ export const generateJWT = async (payload: AuthPayload, expiresIn: number | unde
         return token
 
     } catch (error) {
-        console.error('Error generating JWT:', error);
+        console.error('Error al generar JWT:', error);
         throw error;
     }
 };

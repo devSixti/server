@@ -7,6 +7,10 @@ interface SendNotificationOptions {
   data?: any;
 }
 
+/**
+ * Envía una notificación push a un dispositivo específico usando Firebase Cloud Messaging (FCM).
+ */
+
 export const sendNotificationToDevice = async ({
   tokenDevice,
   title,
@@ -18,12 +22,12 @@ export const sendNotificationToDevice = async ({
       envValues;
 
     if (!tokenDevice) {
-      console.error(`Error sending message: No token device.`);
+      console.error(`Error al enviar notificación: no se recibió token del dispositivo`);
       return false;
     }
 
     if (!googleUrl || !googleKey) {
-      console.error(`Error sending message: No env.`);
+      console.error(`Error al enviar notificación: No env.`);
       return false;
     }
 
@@ -53,11 +57,11 @@ export const sendNotificationToDevice = async ({
 
     const response = await firebaseAdmin.messaging().send(message);
 
-    console.log("Message sent successfully:", response);
+    console.log("Notificación enviada con éxito:", response);
 
     return true;
   } catch (error) {
-    console.error(`Error sending notification: ${error}`);
+    console.error(`Error al enviar notificación: ${error}`);
     return false;
   }
 };

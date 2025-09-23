@@ -2,6 +2,11 @@ import { ExpressController, Status } from "../../common/types";
 import { ErrorMsg, extractPayload } from "../../common/utils";
 import { UserModel } from "../../users/models";
 
+/**
+ * Middleware de autenticación.
+ * Verifica el token, valida el usuario y agrega uid/driver_uid a la request.
+ */
+
 export const isAuth: ExpressController = async (req, res, next) => {
   try {
     const token = req.header("x-token") as string;
@@ -10,36 +15,36 @@ export const isAuth: ExpressController = async (req, res, next) => {
 
     if (!id) {
       throw new ErrorMsg(
-        "Your token is invalid. We couldn’t find your user ID.",
+        "Tu token no es válido. No pudimos encontrar tu ID de usuario.",
         401
       );
     }
 
-    const user = await UserModel.findById(id).populate("driver");
+   const user = await UserModel.findById(id).populate("driver");
 
     if (!user) {
-      throw new ErrorMsg("User not found. Please check the information and try again.", 404);
+      throw new ErrorMsg(
+        "Usuario no encontrado. Verifica la información e inténtalo de nuevo.",
+        404
+      );
     }
 
     if (!user.is_active) {
-      throw new ErrorMsg("Invalid credentials - user inactive", 403);
+      throw new ErrorMsg("Credenciales inválidas - Usuario inactivo.", 403);
     }
 
+   
     if (user.driver) {
 
       // if (user.driver.status_request !== Status.ACCEPTED) {
       //   throw new ErrorMsg("You are not an approved driver", 403);}
 
       req.driver_uid = user.driver.id;
-
+      
     }
 
-
-    req.uid = user.id
-    
-
-
-    next()
+    req.uid = user.id;
+    next();
   } catch (error) {
     next(error);
   }
