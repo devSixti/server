@@ -17,48 +17,48 @@ export class DriverService {
       // 2. Complueba si el conductor existe
       if (!driver) {
         throw new ErrorMsg(
-          "Driver not found. Please check the information and try again.",
+          "Conductor no encontrado. Verifica la información e inténtalo nuevamente.",
           404
         );
       }
 
       // 3. Verifica si el conductor ya ha sido aprobado
       if (driver!.user_info!.document.verified === true) {
-        throw new ErrorMsg("Driver is already approved.", 400);
+        throw new ErrorMsg("El conductor ya se encuentra aprobado.", 400);
       }
 
       // Valida que todos los campos necesarios estén presentes
       validateField(
         driver.user_info!.document.document_id,
-        "Driver document is not uploaded."
+        "No se ha subido el documento de identidad del conductor."
       );
       validateField(
         driver.user_info!.document.front_picture,
-        "Driver front picture is not uploaded."
+        "No se ha subido la foto frontal del documento del conductor."
       );
       validateField(
         driver.user_info!.document.back_picture,
-        "Driver back picture is not uploaded."
+        "No se ha subido la foto trasera del documento del conductor."
       );
       validateField(
         driver.user_info!.email!.address,
-        "Driver email is not uploaded."
+        "El correo electrónico del conductor no está registrado."
       );
       validateField(
         driver.license.front_picture,
-        "Driver license front picture is not uploaded."
+        "Falta subir la foto frontal de la licencia de conducir."
       );
       validateField(
         driver.license.back_picture,
-        "Driver license back picture is not uploaded."
+        "Falta subir la foto trasera de la licencia de conducir."
       );
       validateField(
         driver.license.expiration_date,
-        "Driver license expiration date is not uploaded."
+        "Falta ingresar la fecha de vencimiento de la licencia de conducir."
       );
       validateField(
         driver.criminal_background.picture,
-        "Driver criminal background picture is not uploaded."
+        "Falta subir la constancia de antecedentes penales."
       );
 
       // 12. Actualiza la información del usuario y del conductor
@@ -77,16 +77,16 @@ export class DriverService {
 
       await commonServices.sendEmail({
         to: driver!.user_info!.email!.address || "",
-        subject: "Solicitud aprovada",
+        subject: "Solicitud aprobada",
         htmlBody: approvedEmailBody(),
       });
 
       // 13. Devuelve una respuesta exitosa
 
-      return { message: "Approve driver successfully.", info: { driver } };
+      return { message: "Conductor aprobado exitosamente.", info: { driver } };
     } catch (error) {
       // Error handling
-      console.error("Error approving user:", error);
+      console.error("Error al aprobar conductor:", error);
       if (driver) {
         driver.status_request = Status.REJECTED;
         await driver.save();
@@ -94,7 +94,7 @@ export class DriverService {
           to: driver!.user_info!.email!.address || "",
           subject: "Solicitud rechazada",
           htmlBody: rejectedEmailBody(
-            "Solicitud rechazada: Su solicitud ha sido rechazada debido a un error en la verificación."
+            "Solicitud rechazada: su solicitud ha sido rechazada debido a un error en la verificación"
           ),
         });
       }
@@ -105,9 +105,9 @@ export class DriverService {
   //Delete
   static async delete(driverInfo: any): AsyncCustomResponse {
     try {
-      return { message: "Delete driver successfully.", info: {} };
+      return { message: "Conductor eliminado exitosamente.", info: {} };
     } catch (error) {
-      console.error("Error deleting driver:", error);
+      console.error("Error al eliminar conductor:", error);
       throw error;
     }
   }
@@ -129,7 +129,7 @@ export class DriverService {
         .populate("vehicles");
 
       return {
-        message: "Fetched users successfully.",
+        message: "Conductores obtenidos correctamente.",
         info: {
           pagination: paginationResults({
             currentCount: users.length,
@@ -141,7 +141,7 @@ export class DriverService {
         },
       };
     } catch (error) {
-      console.error("Error getting all drivers:", error);
+      console.error("Error al obtener todos los conductores:", error);
       throw error;
     }
   }
@@ -172,7 +172,7 @@ export class DriverService {
       drivers = drivers.filter((driver) => driver?.user_info !== null);
 
       return {
-        message: "Search driver successfully.",
+        message: "Conductores buscados correctamente",
         info: {
           pagination: paginationResults({
             currentCount: drivers.length,
@@ -184,7 +184,7 @@ export class DriverService {
         },
       };
     } catch (error) {
-      console.error("Error searching drivers:", error);
+      console.error("Error al buscar conductores:", error);
       throw error;
     }
   }

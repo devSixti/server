@@ -3,8 +3,6 @@ import { ExpressController } from "common/types";
 /**
  * Controlador de health check.
  * Responde con un mensaje simple para indicar que el servicio está activo.
- * @route GET /health
- * @returns {Object} Mensaje de estado del servicio
  */
 export const healthCheck: ExpressController = async (req, res, next) => {
   try {
@@ -15,3 +13,8 @@ export const healthCheck: ExpressController = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+
