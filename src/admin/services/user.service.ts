@@ -7,9 +7,9 @@ export class UserService {
   //Delete
   static async deleteUser(userInfo: any): AsyncCustomResponse {
     try {
-      return { message: "Delete user successfully.", info: {} };
+      return { message: "Usuario eliminado exitosamente.", info: {} };
     } catch (error) {
-      console.error("Error  deleting user:", error);
+      console.error("Error al eliminar usuario:", error);
       throw error;
     }
   }
@@ -31,7 +31,7 @@ export class UserService {
         .populate("device");
 
       return {
-        message: "Fetched users successfully.",
+        message: "Usuarios obtenidos correctamente.",
         info: {
           pagination: paginationResults({
             currentCount: users.length,
@@ -43,7 +43,7 @@ export class UserService {
         },
       };
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error al obtener usuarios:", error);
       throw error;
     }
   }
@@ -69,7 +69,7 @@ export class UserService {
       });
 
       return {
-        message: "Search users successfully.",
+        message: "Usuarios buscados correctamente.",
         info: {
           pagination: paginationResults({
             currentCount: users.length,
@@ -81,7 +81,7 @@ export class UserService {
         },
       };
     } catch (error) {
-      console.error("Error searching users:", error);
+      console.error("Error al buscar usuarios:", error);
       throw error;
     }
   }

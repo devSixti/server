@@ -5,11 +5,11 @@ import { ErrorMsg, paginationResults } from "../../common/utils";
 import { validateField } from "../../common/helpers";
 
 export class VehicleService {
-  //Aprobar vehículo
+  // Aprobar vehículo
   static async approve(vehicleId: string): AsyncCustomResponse {
     try {
       if (!vehicleId) {
-        throw new ErrorMsg("Vehicle ID is required.", 400);
+        throw new ErrorMsg("El ID del vehículo es obligatorio.", 400);
       }
 
       const vehicle = await VehicleModel.findById(vehicleId).populate({
@@ -19,34 +19,34 @@ export class VehicleService {
 
       if (!vehicle) {
         throw new ErrorMsg(
-          "Vehicle not found. Please check the information and try again.",
+          "Vehículo no encontrado. Verifique la información e intente nuevamente.",
           404
         );
       }
 
       if (vehicle.status_request === Status.ACCEPTED) {
-        throw new ErrorMsg("Vehicle has already been approved.", 400);
+        throw new ErrorMsg("El vehículo ya fue aprobado previamente.", 400);
       }
 
       validateField(
         vehicle!.property_card.front_picture,
-        "Vehicle front picture is required."
+        "La foto frontal de la tarjeta de propiedad es obligatoria."
       );
       validateField(
         vehicle!.property_card.back_picture,
-        "Vehicle back picture is required."
+        "La foto trasera de la tarjeta de propiedad es obligatoria."
       );
       validateField(
         vehicle!.mandatory_insurance.picture,
-        "Vehicle insurance picture is required."
+        "La foto del seguro obligatorio es obligatoria."
       );
       validateField(
         vehicle!.mandatory_insurance.expiration_date,
-        "Vehicle insurance expiration date is required."
+        "La fecha de vencimiento del seguro obligatorio es obligatoria."
       );
       validateField(
         vehicle!.technical_mechanical.picture,
-        "Vehicle mechanical picture is required."
+        "La foto del certificado técnico-mecánico es obligatoria."
       );
 
       vehicle.status_request = Status.ACCEPTED;
@@ -57,7 +57,7 @@ export class VehicleService {
       await vehicle.save();
 
       return {
-        message: "Vehicle approved successfully.",
+        message: "Vehículo aprobado exitosamente.",
         info: {
           vehicle,
         },
@@ -67,7 +67,7 @@ export class VehicleService {
     }
   }
 
-  //Get all
+  // Obtener todos los vehículos
   static async getAll(paginationDto: PaginationDto): AsyncCustomResponse {
     try {
       const { pageNumber = 1, pageSize = 10 } = paginationDto;
@@ -83,7 +83,7 @@ export class VehicleService {
         .populate("driver");
 
       return {
-        message: "Fetched users successfully.",
+        message: "Vehículos obtenidos correctamente.",
         info: {
           pagination: paginationResults({
             currentCount: vehicles.length,
@@ -99,11 +99,11 @@ export class VehicleService {
     }
   }
 
-  //Get by driver id
+  // Obtener vehículos por ID de conductor
   static async getByDriverId(driverId: string): AsyncCustomResponse {
     try {
       if (!driverId) {
-        throw new ErrorMsg("Driver ID is required.", 400);
+        throw new ErrorMsg("El ID del conductor es obligatorio.", 400);
       }
 
       const vehicles = await VehicleModel.find({
@@ -120,7 +120,7 @@ export class VehicleService {
       });
 
       return {
-        message: "Fetched vehicles successfully.",
+        message: "Vehículos obtenidos correctamente.",
         info: {
           pagination: paginationResults({
             currentCount: vehicles.length,
@@ -132,8 +132,9 @@ export class VehicleService {
         },
       };
     } catch (error) {
-      console.error("Error getting vehicles by driver ID:", error);
+      console.error("Error al obtener vehículos por ID de conductor:", error);
       throw error;
     }
   }
 }
+

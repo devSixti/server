@@ -3,35 +3,38 @@ import { ExpressController } from "../../common/types";
 import { ErrorMsg } from "../../common/utils";
 import { RoleModel, UserModel } from "../../users/models";
 
-
+/**
+ * Middleware para verificar si el usuario autenticado tiene el rol de Administrador.
+ * @route Middleware
+ * @throws 401 Si el token no contiene un ID de usuario válido
+ * @throws 404 Si el rol Administrador no existe en la base de datos
+ * @throws 403 Si el rol está inactivo o el usuario no tiene permisos de administrador
+ */
 export const checkAdmin: ExpressController = async (req, res, next) => {
-    try {
-        const id = req.uid
+  const id = req.uid;
 
-        if (!id) {
-            throw new ErrorMsg(
-                "Your token is invalid. We couldn’t find your user ID.",
-                401
-            );
-        }
-        const admin = await RoleModel.findOne({ name: Role.ADMIN });
+  if (!id) {
+    throw new ErrorMsg(
+      "Tu token no es válido. No pudimos encontrar tu ID de usuario.",
+      401
+    );
+  }
 
-        if (!admin) {
-            throw new ErrorMsg("Admin role not found", 404);
-        }
+  const adminRole = await RoleModel.findOne({ name: Role.ADMIN });
 
-        if (admin.is_active === false) {
-            throw new ErrorMsg("Admin role is inactive", 403);
-        }
+  if (!adminRole) {
+    throw new ErrorMsg("No se encontró el rol Administrador.", 404);
+  }
 
-        const user = await UserModel.findById(id).populate("driver");
+  if (!adminRole.is_active) {
+    throw new ErrorMsg("El rol Administrador está inactivo.", 403);
+  }
 
-        if (user?.role_id?.toString() !== admin?._id?.toString()) {
-            throw new ErrorMsg("You are not an admin", 403);
-        }
+  const user = await UserModel.findById(id).populate("driver");
 
-        next()
-    } catch (error) {
-        next(error);
-    }
+  if (user?.role_id?.toString() !== adminRole._id.toString()) {
+    throw new ErrorMsg("No tienes permisos de administrador.", 403);
+  }
+
+  next();
 };
