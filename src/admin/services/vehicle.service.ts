@@ -54,7 +54,6 @@ export class VehicleService {
     const { pageNumber = 1, pageSize = 10 } = paginationDto; // Extrae los parámetros de paginación, con valores por defecto.
     const page = Number(pageNumber);
     const limit = Number(pageSize);
-
     // Verifica que los valores de la paginación sean válidos
     if (page <= 0 || limit <= 0) throw new ErrorMsg("Paginación inválida", 400);
 

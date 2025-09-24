@@ -108,6 +108,7 @@ export class UserService {
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       throw new ErrorMsg("Error al obtener usuarios", 500);
+
     }
   }
   /**
