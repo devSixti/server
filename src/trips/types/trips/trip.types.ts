@@ -1,5 +1,5 @@
 import { Document, ObjectId } from "mongodb";
-import { TripStatus } from "./request.status";
+import { TripStatus } from "./trip.status";
 import { Driver, User } from "../../../users/types";
 
 export interface Trip {
@@ -12,6 +12,7 @@ export interface Trip {
     final_fare: number;
     status: TripStatus;
     acceptedAt?: Date;
-    driver: Driver
-    passenger: User
+    driver: Driver;
+    passenger: User;
+     
   }

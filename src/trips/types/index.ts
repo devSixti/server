@@ -1,3 +1,6 @@
-export { RequestStatus, TripStatus } from './trips/request.status';
-export { Trip } from './trips/trip.types';
-export { PaymentMethod, TripRequest, TripRequestActions } from './trips/trip.request.types';
+export * from "./trips/trip.interfaces";
+export * from "./trips/trip.types";
+export * from "./trips/trip.status";
+export * from "./trips/request.status";
+export * from "./trips/payment.method";
+export * from "./trips/trip.actions";

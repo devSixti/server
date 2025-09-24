@@ -55,7 +55,7 @@ const tripRequestSchema = new Schema<TripRequest>(
       required: true,
     },
 
-    paymant_method: {
+    payment_method: {
       type: String,
       enum: PaymentMethod,
       required: true,

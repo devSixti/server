@@ -28,7 +28,7 @@ export interface TripRequest {
     distance: number;
     route: Route;
     price: number;
-    paymant_method: PaymentMethod;
+    payment_method: PaymentMethod;
     service_type: ServiceType;
     status: RequestStatus;
     createdAt?: Date;
