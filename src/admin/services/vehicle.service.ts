@@ -4,7 +4,7 @@ import { AsyncCustomResponse, Status } from "../../common/types";
 import { ErrorMsg, paginationResults } from "../../common/utils";
 import { validateField } from "../../common/helpers";
 import { Vehicle } from "../../users/types/vehicle.type";
-import { VehicleDoc } from "./../repository/vehicle.repository"; // asegúrate de exportarlo
+import { VehicleDoc } from "./../repository/vehicle.repository";
 
 /** Helper para validar campos obligatorios antes de aprobar un vehículo */
 function validateVehicleForApproval(vehicle: VehicleDoc) {
