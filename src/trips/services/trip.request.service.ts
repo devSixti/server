@@ -1,11 +1,8 @@
 import { TripRequestModel } from "../models";
 import { TripModel } from "../models";
 import { PaymentMethod, RequestStatus, TripStatus } from "../types";
-import { commonServices } from "../../users/services";
 import { AsyncCustomResponse, ServiceType } from "../../common/types";
 import { findNearestDrivers } from "../utils";
-import { DriverModel, DiscountModel } from "../../users/models";
-import { ErrorMsg } from "../../common/utils";
 import { NotificationService } from "../../users/services/notification.service";
 
 interface TripRequestDto {

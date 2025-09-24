@@ -1,111 +1,125 @@
-import { ExpressController, Status, VehicleType } from "../../common/types";
+import { NextFunction, Request, Response } from "express";
+import { VehicleModel } from "../../users/models/vehicles.model";
 import { ErrorMsg } from "../../common/utils";
-import { VehicleModel } from "../../users/models";
+import { Status, VehicleType } from "../../common/types";
 
-// Define restriction days for cars and motorbikercycles
+export enum VehicleCheckMode {
+  BASIC = "basic",
+  FULL = "full"
+}
+
+// 🚦 Definición de pico y placa
 const restrictionDays: { [key in VehicleType]: { [key: string]: string[] } } = {
-    car: {
-        Monday: ["0", "2"],
-        Tuesday: ["6", "9"],
-        Wednesday: ["3", "7"],
-        Thursday: ["4", "8"],
-        Friday: ["1", "5"]
-    },
-    motorbike: {
-        Monday: ["0", "2"],
-        Tuesday: ["6", "9"],
-        Wednesday: ["3", "7"],
-        Thursday: ["4", "8"],
-        Friday: ["1", "5"]
-    },
-    bike: {}
+  car: {
+    Monday: ["0", "2"],
+    Tuesday: ["6", "9"],
+    Wednesday: ["3", "7"],
+    Thursday: ["4", "8"],
+    Friday: ["1", "5"]
+  },
+  motorbike: {
+    Monday: ["0", "2"],
+    Tuesday: ["6", "9"],
+    Wednesday: ["3", "7"],
+    Thursday: ["4", "8"],
+    Friday: ["1", "5"]
+  },
+  bike: {}
 };
 
-// Middleware to check vehicle restrictions
-
-export const checkVehicle: ExpressController = async (req, res, next) => {
+/**
+ * Middleware que valida un vehículo.
+ * @param mode BASIC → existencia, estado y placas.
+ *             FULL → además documentos, verificación y vencimientos.
+ */
+export const checkVehicle =
+  (mode: VehicleCheckMode = VehicleCheckMode.BASIC) =>
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // 1. Get vehicle ID from request
+      const vehicleId = req.vehicle_uid;
+      if (!vehicleId) throw new ErrorMsg("Tu vehículo no está registrado aún.", 403);
 
-        const vehicleId = req.vehicle_uid;
+      const vehicle = await VehicleModel.findById(vehicleId);
+      if (!vehicle) throw new ErrorMsg("Vehículo no encontrado.", 404);
 
-        // 2. Check if vehicle ID is provided
+      if (vehicle.status_request !== Status.ACCEPTED) {
+        throw new ErrorMsg("El vehículo aún no ha sido aprobado.", 403);
+      }
 
-        if (!vehicleId) {
-            throw new ErrorMsg("Your vehicle is not registered yet", 403);
+      // Validaciones FULL
+      if (mode === VehicleCheckMode.FULL) {
+        if (!vehicle.property_card?.verified) {
+          throw new ErrorMsg("La tarjeta de propiedad no está verificada.", 403);
+        }
+        if (!vehicle.mandatory_insurance?.verified) {
+          throw new ErrorMsg("El seguro obligatorio no está verificado.", 403);
+        }
+        if (!vehicle.technical_mechanical?.verified) {
+          throw new ErrorMsg("La revisión técnico-mecánica no está verificada.", 403);
         }
 
-        // 3. Find vehicle by ID
-
-        const vehicle = await VehicleModel.findById(vehicleId);
-
-        // 4. Check if vehicle exists
-
-        if (!vehicle) {
-            throw new ErrorMsg("Vehicle not found. Please check the information and try again.", 404);
+        // Expiración de documentos
+        const now = new Date();
+        if (vehicle.mandatory_insurance.expiration_date < now) {
+          vehicle.mandatory_insurance.verified = false;
+          vehicle.status_request = Status.PENDING;
+          await vehicle.save();
+          throw new ErrorMsg("El seguro obligatorio está vencido.", 403);
         }
 
-        // 5. Check if vehicle is accepted
+        if (vehicle.technical_mechanical.expiration_date < now) {
+          vehicle.technical_mechanical.verified = false;
+          vehicle.status_request = Status.PENDING;
+          await vehicle.save();
+          throw new ErrorMsg("La revisión técnico-mecánica está vencida.", 403);
+        }
+      }
 
-        if (vehicle.status_request !== Status.ACCEPTED) {
-            throw new ErrorMsg("Vehicle not accepted yet. Please wait for the approval.", 403);
+      // Validar placas
+      if (!vehicle.plates) {
+        throw new ErrorMsg("El vehículo debe tener placas registradas.", 403);
+      }
+
+      // 🚦 Validación de pico y placa
+      const currentDate = new Date();
+      const currentDay = currentDate.toLocaleString("en-US", {
+        weekday: "long"
+      }) as keyof typeof restrictionDays.car;
+      const currentHour = currentDate.getHours();
+
+      const plateRestriction = restrictionDays[vehicle.type]?.[currentDay] || [];
+
+      switch (vehicle.type) {
+        case VehicleType.car: {
+          const lastDigit = vehicle.plates.charAt(vehicle.plates.length - 1);
+          if (
+            plateRestriction.includes(lastDigit) &&
+            currentHour >= 5 &&
+            currentHour <= 20
+          ) {
+            throw new ErrorMsg("Este carro no puede circular hoy por pico y placa.", 403);
+          }
+          break;
         }
 
-        // 6. Check if vehicle has plates
-
-        if (!vehicle.plates) {
-            throw new ErrorMsg("Vehicle must have plates", 403);
+        case VehicleType.motorbike: {
+          const firstDigit = vehicle.plates.charAt(4); // suponiendo formato ABC12D
+          if (
+            plateRestriction.includes(firstDigit) &&
+            currentHour >= 5 &&
+            currentHour <= 20
+          ) {
+            throw new ErrorMsg(
+              "Esta moto no puede circular hoy por pico y placa.",
+              403
+            );
+          }
+          break;
         }
+      }
 
-        // 7. Get current date and time
-
-        const currentDate = new Date();
-        const currentDay = currentDate.toLocaleString('en-US', { weekday: 'long' }) as keyof typeof restrictionDays.car;
-        const currentHour = currentDate.getHours();
-        const plateRestriction = restrictionDays[vehicle.type][currentDay];
-
-        // 8. Check vehicle type and apply restrictions
-
-        switch (vehicle.type) {
-            case VehicleType.car:
-
-                // 8.1 Get the last digit of the vehicle's plate
-
-                const lastPlateNumber = vehicle.plates.charAt(vehicle.plates.length - 1);
-
-                // 8.2 Check if the vehicle is restricted based on the last digit of the plate and current time
-
-                if (plateRestriction.includes(lastPlateNumber) && (currentHour >= 5 && currentHour <= 20)) {
-                    throw new ErrorMsg("This vehicle is not allowed to circulate today", 403);
-                }
-                break;
-
-            case VehicleType.motorbike:
-
-                // 8.3 Get the first digit of the vehicle's plate
-
-                const firstNumber = vehicle.plates.charAt(4);
-
-                // 8.4 Check if the vehicle is restricted based on the first digit of the plate and current time
-
-                if (plateRestriction.includes(firstNumber) && (currentHour >= 5 && currentHour <= 20)) {
-                    throw new ErrorMsg("This vehicle is not allowed to circulate today", 403);
-                }
-                break;
-        }
-
-        // 9. Proceed to the next middleware
-
-        next();
-
-    } catch (error) {
-
-        // 10. Pass error to the next middleware
-
-        next(error);
+      next();
+    } catch (err) {
+      next(err);
     }
-};
-
-
-
-
+  };
