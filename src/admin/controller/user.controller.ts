@@ -10,6 +10,9 @@ const catchAsync =
   (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
+// Crear una instancia de UserService
+const userService = new UserService();
+
 export class UserController {
   /**
    * URL: GET /admin/users
@@ -17,7 +20,7 @@ export class UserController {
    * Obtiene todos los usuarios registrados en el sistema.
    */
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const users = await UserService.getAll(req.query);
+    const users = await userService.getAll(req.query);
     res.json({ status: "success", data: users });
   });
 
@@ -27,7 +30,7 @@ export class UserController {
    * Busca usuarios según parámetros de búsqueda.
    */
   static search = catchAsync(async (req: Request, res: Response) => {
-    const users = await UserService.search(req.query);
+    const users = await userService.search(req.query);
     res.json({ status: "success", data: users });
   });
 
@@ -38,7 +41,7 @@ export class UserController {
    */
   static delete = catchAsync(async (req: Request, res: Response) => {
     const { userId } = req.params;
-    await UserService.deleteUser(userId);
+    await userService.deleteUser(userId);
     res.json({
       status: "success",
       message: "Usuario eliminado exitosamente",

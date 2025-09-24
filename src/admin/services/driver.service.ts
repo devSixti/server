@@ -7,102 +7,87 @@ import { ErrorMsg, paginationResults } from "../../common/utils";
 import { validateField } from "../../common/helpers";
 
 export class DriverService {
-  // Funcion para aprobar un conductor
+  /**
+   * Función para aprobar un conductor
+   * @param driverId - ID del conductor a aprobar
+   * @returns AsyncCustomResponse con información del conductor aprobado
+   */
   static async approve(driverId: string): AsyncCustomResponse {
-    let driver;
+    // Inicia una sesión de MongoDB para manejo de transacciones
+    const session = await DriverModel.startSession();
+    session.startTransaction();
+
     try {
-      // 1. Busqua al conductor por ID y completa la información del usuario
-      driver = await DriverModel.findById(driverId).populate("user_info");
+      // Busca el conductor por ID y popula la información del usuario
+      const driver = await DriverModel.findById(driverId)
+        .populate("user_info")
+        .session(session);
 
-      // 2. Complueba si el conductor existe
+      // Validación: si no se encuentra el conductor, lanza error 404
       if (!driver) {
-        throw new ErrorMsg(
-          "Conductor no encontrado. Verifica la información e inténtalo nuevamente.",
-          404
-        );
+        throw new ErrorMsg("Conductor no encontrado.", 404);
       }
 
-      // 3. Verifica si el conductor ya ha sido aprobado
-      if (driver!.user_info!.document.verified === true) {
-        throw new ErrorMsg("El conductor ya se encuentra aprobado.", 400);
+      // Validación: si ya fue aprobado, lanza error 400
+      if (driver.user_info?.document?.verified) {
+        throw new ErrorMsg("El conductor ya está aprobado.", 400);
       }
 
-      // Valida que todos los campos necesarios estén presentes
-      validateField(
-        driver.user_info!.document.document_id,
-        "No se ha subido el documento de identidad del conductor."
-      );
-      validateField(
-        driver.user_info!.document.front_picture,
-        "No se ha subido la foto frontal del documento del conductor."
-      );
-      validateField(
-        driver.user_info!.document.back_picture,
-        "No se ha subido la foto trasera del documento del conductor."
-      );
-      validateField(
-        driver.user_info!.email!.address,
-        "El correo electrónico del conductor no está registrado."
-      );
-      validateField(
-        driver.license.front_picture,
-        "Falta subir la foto frontal de la licencia de conducir."
-      );
-      validateField(
-        driver.license.back_picture,
-        "Falta subir la foto trasera de la licencia de conducir."
-      );
-      validateField(
-        driver.license.expiration_date,
-        "Falta ingresar la fecha de vencimiento de la licencia de conducir."
-      );
-      validateField(
-        driver.criminal_background.picture,
-        "Falta subir la constancia de antecedentes penales."
+      // Validaciones de campos obligatorios
+      const validations: [string | null, string][] = [
+        [driver.user_info?.document?.document_id ?? null, "Falta documento de identidad"],
+        [driver.license.front_picture ?? null, "Falta foto frontal de licencia"],
+        [
+          driver.license.expiration_date
+            ? driver.license.expiration_date.toISOString()
+            : null,
+          "Falta fecha de vencimiento"
+        ],
+        [driver.criminal_background.picture ?? null, "Falta antecedentes penales"],
+      ];
+
+      // Recorre cada validación y lanza error si algún campo es nulo o vacío
+      validations.forEach(([field, msg]) => validateField(field, msg));
+
+      // Actualiza el documento del usuario para marcarlo como verificado
+      await UserModel.findByIdAndUpdate(
+        driver.user_info!._id,
+        { "document.verified": true },
+        { session }
       );
 
-      // 12. Actualiza la información del usuario y del conductor
-
-      await UserModel.findByIdAndUpdate(driver.user_info!._id, {
-        "document.verified": true,
-      });
-
+      // Marca licencias y antecedentes como verificados, activa disponibilidad y cambia el estado
       driver.license.verified = true;
       driver.criminal_background.verified = true;
       driver.is_available = true;
       driver.status_request = Status.ACCEPTED;
 
-      // Guarda los cambios en el conductor
-      await driver.save();
+      // Guarda los cambios en la base de datos dentro de la transacción
+      await driver.save({ session });
 
+      // Commit de la transacción
+      await session.commitTransaction();
+      session.endSession();
+
+      // Enviar correo de aprobación fuera de la transacción
       await commonServices.sendEmail({
-        to: driver!.user_info!.email!.address || "",
+        to: driver.user_info?.email?.address || "",
         subject: "Solicitud aprobada",
         htmlBody: approvedEmailBody(),
       });
-
-      // 13. Devuelve una respuesta exitosa
-
+      // Retorna respuesta exitosa
       return { message: "Conductor aprobado exitosamente.", info: { driver } };
     } catch (error) {
-      // Error handling
+      // Abort de la transacción en caso de error
+      await session.abortTransaction();
+      session.endSession();
       console.error("Error al aprobar conductor:", error);
-      if (driver) {
-        driver.status_request = Status.REJECTED;
-        await driver.save();
-        await commonServices.sendEmail({
-          to: driver!.user_info!.email!.address || "",
-          subject: "Solicitud rechazada",
-          htmlBody: rejectedEmailBody(
-            "Solicitud rechazada: su solicitud ha sido rechazada debido a un error en la verificación"
-          ),
-        });
-      }
       throw error;
     }
   }
-
-  //Delete
+  /**
+   * Función para eliminar un conductor
+   */
   static async delete(driverInfo: any): AsyncCustomResponse {
     try {
       return { message: "Conductor eliminado exitosamente.", info: {} };
@@ -111,17 +96,18 @@ export class DriverService {
       throw error;
     }
   }
-
-  //Get all
+  /**
+   * Función para obtener todos los conductores con paginación
+   */
   static async getAll(paginationDto: PaginationDto): AsyncCustomResponse {
     try {
       const { pageNumber = 1, pageSize = 10 } = paginationDto;
 
       const page = Number(pageNumber);
       const limit = Number(pageSize);
-
+      // Obtiene el total de conductores
       const totalItems = await DriverModel.countDocuments();
-
+      // Consulta a la base de datos con skip/limit para paginación
       const users = await DriverModel.find()
         .skip((page - 1) * limit)
         .limit(limit)
@@ -145,12 +131,13 @@ export class DriverService {
       throw error;
     }
   }
-
-  //Get by id
+  /**
+   * Función para buscar conductores por parámetros de búsqueda
+   */
   static async search(searchDto: SearchParamsDto): AsyncCustomResponse {
     try {
       const { searchValue } = searchDto;
-
+      // Busca conductores en la base de datos filtrando por múltiples campos
       let drivers = await DriverModel.find({}).populate({
         path: "user_info",
         match: {
@@ -168,7 +155,7 @@ export class DriverService {
           ],
         },
       });
-      // .where("user_info").ne(null);
+      // Filtra para eliminar usuarios nulos (sin información de usuario)
       drivers = drivers.filter((driver) => driver?.user_info !== null);
 
       return {
@@ -188,6 +175,4 @@ export class DriverService {
       throw error;
     }
   }
-
-  
 }
