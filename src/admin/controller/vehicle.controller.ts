@@ -18,7 +18,11 @@ export class VehicleController {
    */
   static approve = catchAsync(async (req: Request, res: Response) => {
     const { vehicleId } = req.params;
-    const vehicle = await VehicleService.approve(vehicleId);
+
+    // Crear una instancia de VehicleService
+    const vehicleService = new VehicleService();
+    
+    const vehicle = await vehicleService.approve(vehicleId);  // Llamar al método de la instancia
     res.json({ status: "success", data: vehicle });
   });
 
@@ -28,7 +32,10 @@ export class VehicleController {
    * Obtiene todos los vehículos registrados en el sistema.
    */
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const vehicles = await VehicleService.getAll(req.query);
+    // Crear una instancia de VehicleService
+    const vehicleService = new VehicleService();
+    
+    const vehicles = await vehicleService.getAll(req.query);  // Llamar al método de la instancia
     res.json({ status: "success", data: vehicles });
   });
 
@@ -39,7 +46,11 @@ export class VehicleController {
    */
   static getByDriver = catchAsync(async (req: Request, res: Response) => {
     const { driverId } = req.params;
-    const vehicles = await VehicleService.getByDriverId(driverId);
+
+    // Crear una instancia de VehicleService
+    const vehicleService = new VehicleService();
+    
+    const vehicles = await vehicleService.getByDriverId(driverId, req.query);  // Llamar al método de la instancia
     res.json({ status: "success", data: vehicles });
   });
 }
