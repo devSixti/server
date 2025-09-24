@@ -1,19 +1,5 @@
 {
-  "include": [
-    "src/**/*",
-    "seed/**/*",
-    "seed",
-    "**/*.json",
-  ],
-  "exclude": [
-    "coverage",
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-  ],
   "compilerOptions": {
-    "resolveJsonModule": true,
     "target": "ES2019",
     "module": "commonjs",
     "strict": true,
@@ -22,12 +8,8 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "baseUrl": "./src",
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "types": [
-      "node",
-      "express"
-    ] // Ensure express types are included
+    "types": ["node", "express"]
   },
+  "include": ["src"],
+  "exclude": ["coverage", "node_modules", "dist"]
 }

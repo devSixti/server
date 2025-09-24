@@ -1,10 +1,11 @@
+/// <reference path="./types/express/index.d.ts" />
 import http from "http";
 import server from "./server";
 import { connectDb, envValues } from "./common/config";
 import { socketConfig } from "./common/config/sockets.config";
 import { Socket } from "socket.io";
 
-import driverHandler from "./client-driver"; // ajusta la ruta si tu carpeta es diferente
+import driverHandler from "./client-driver";
 
 const main = async () => {
   try {
