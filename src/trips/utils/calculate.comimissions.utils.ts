@@ -19,14 +19,19 @@ export const calculateComission = (trip: Trip): CommissionResult => {
     const commission = tripAmount * commissionRate;
     const driverEarnings = tripAmount - commission;
 
-    const driverWallet = trip?.driver.wallet;
+    // ✅ Validación segura de driver y wallet
+    if (!trip.driver || !trip.driver.wallet) {
+        throw new Error("Driver o driver wallet no encontrados");
+    }
 
-    driverWallet.balance -= commission
+    const driverWallet = trip.driver.wallet;
+
+    driverWallet.balance -= commission;
 
     return {
         driverEarnings,
         commission,
         driverBalance: driverWallet.balance
-    
+        
     }
 }
