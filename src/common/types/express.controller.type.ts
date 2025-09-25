@@ -10,7 +10,7 @@ export type ExpressController = (
   req: CustomRequest,
   res: Response,
   next: NextFunction
-) => Promise<void>;
+) => Promise<void | Response>;
 
 
 export type ErrorsController = (

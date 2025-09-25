@@ -1,35 +1,20 @@
 import { VehicleModel } from "../../models";
-import { ErrorMsg } from "../../../common/utils";
 import { AsyncCustomResponse, Status } from "../../../common/types";
-import { Vehicle } from "../../../users/types";
-import { AddOrUpdateVehicleDTO } from "../../../users/dto";
-import { transformVehicleData } from "../../../users/helpers";
+import { ErrorMsg } from "../../../common/utils";
+import { AddOrUpdateVehicleDTO } from "../../dto";
+import { transformVehicleData } from "../../helpers";
+import { Vehicle } from "../../types";
 
+// Agregar o actualizar vehículo
 export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }: AddOrUpdateVehicleDTO): AsyncCustomResponse => {
   try {
-
     const {
-      frontPropertyCard,
-      backPropertyCard,
-
-      pictureMandatoryInsurance,
-      expirationDateMandatoryInsurance,
-
+      frontPropertyCard, backPropertyCard,
+      pictureMandatoryInsurance, expirationDateMandatoryInsurance,
+      pictureTechnicalMechanical, expirationDateTechnicalMechanical,
+      frontPicture, backPicture, insidePicture,
+      brand, model, year, color, capacity, fuelType, plates, type,
       submitted = false,
-
-      pictureTechnicalMechanical,
-      expirationDateTechnicalMechanical,
-      frontPicture,
-      backPicture,
-      insidePicture,
-      brand,
-      model,
-      year,
-      color,
-      capacity,
-      fuelType,
-      plates,
-      type,
     } = newVehicleInfo;
 
     const pictures = {
@@ -42,25 +27,23 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
       front_picture: frontPropertyCard,
       back_picture: backPropertyCard,
       verified: false,
-    }
+    };
 
     const mandatoryInsurance = {
       picture: pictureMandatoryInsurance,
       expiration_date: expirationDateMandatoryInsurance,
-      verified: false
-    }
+      verified: false,
+    };
+
     const technicalMechanical = {
       picture: pictureTechnicalMechanical,
       expiration_date: expirationDateTechnicalMechanical,
-      verified: false
-    }
+      verified: false,
+    };
 
-    // 🚗 Si vehicleId tiene un valor, verificamos si ya existe
     if (vehicleId) {
       const existingVehicle = await VehicleModel.findById(vehicleId);
-
       if (existingVehicle) {
-        // Si el vehículo existe, lo actualizamos con los nuevos datos
         const updatedVehicle = await VehicleModel.findByIdAndUpdate(
           vehicleId,
           {
@@ -87,7 +70,7 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
         return {
           message: `Vehicle updated successfully.`,
           info: {
-            submitted: submitted || false,
+            submitted,
             statusVehicle: updatedVehicle!.status_request,
             vehicle: transformedVehicle,
           },
@@ -101,7 +84,7 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
       throw new ErrorMsg("You can not add more vehicles", 409);
     }
 
-    const newVehicleData: any = {
+    const newVehicle = await VehicleModel.create({
       driver_id: driverId,
       plates,
       type,
@@ -116,19 +99,61 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
       capacity,
       fuel_type: fuelType,
       status_request: Status.PENDING,
-    };
-
-    const newVehicle = await VehicleModel.create(newVehicleData);
+    });
 
     const transformedNewVehicle = transformVehicleData(await VehicleModel.findById(newVehicle._id).lean());
 
     return {
       message: `Vehicle ID not found. New vehicle created.`,
       info: {
-        submitted: submitted || false,
+        submitted,
         statusVehicle: newVehicle.status_request,
         vehicle: transformedNewVehicle,
       },
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ✅ Eliminar vehículo
+export const deleteVehicleById = async (vehicleId: string): AsyncCustomResponse => {
+  try {
+    const vehicle = await VehicleModel.findById(vehicleId);
+
+    if (!vehicle) {
+      throw new ErrorMsg("Vehicle not found", 404);
+    }
+
+    await VehicleModel.findByIdAndDelete(vehicle._id);
+
+    return {
+      message: `Vehicle deleted`,
+      info: { vehicle },
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ✅ Obtener vehículos del conductor
+export const getDriverVehicle = async (driverId: string): AsyncCustomResponse => {
+  try {
+    const vehicles = await VehicleModel.find({
+      driver_id: driverId,
+      "property_card.verified": true,
+      "mandatory_insurance.verified": true,
+      "technical_mechanical.verified": true,
+      status_request: Status.ACCEPTED,
+    }).populate("driver");
+
+    if (vehicles.length === 0) {
+      throw new ErrorMsg(`No vehicles authorized for this driver`, 404);
+    }
+
+    return {
+      message: `Vehicles found`,
+      info: { vehicles },
     };
   } catch (error) {
     throw error;
