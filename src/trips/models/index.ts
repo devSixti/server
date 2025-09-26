@@ -1,2 +1,2 @@
-export { TripModel } from "./trips/trip.model";
-export { TripRequestModel } from "./trips/trip.request.model";
+export { TripModel } from "./trip.model";
+export { TripRequestModel } from "./trip.request.model";
