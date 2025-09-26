@@ -1,15 +1,30 @@
-import { RoleModel, UserModel } from "../../models";
+import { DriverModel, RoleModel, UserModel } from "../../models";
 import { AsyncCustomResponse, Status } from "../../../common/types";
 import { ErrorMsg } from "../../../common/utils";
-import { Role, User } from "../../../users/types";
+import { Role, User } from "../../types";
 
+// Cambiar disponibilidad del conductor
+export const changeDriverAvailable = async (id: string): AsyncCustomResponse => {
+  try {
+    const driver = await DriverModel.findById(id).exec();
+
+    driver?.updateOne({ is_available: !driver.is_available }).exec();
+
+    return {
+      message: `Driver availability changed to ${driver?.is_available}`,
+      info: { is_available: driver?.is_available },
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Cambiar rol del conductor
 export const changeDriverRole = async (id: string): AsyncCustomResponse => {
   try {
-
     const user = (await UserModel.findById(id)
       .populate("driver")
       .populate("role")) as User;
-
 
     if (!user || user?.driver?.status_request !== Status.ACCEPTED) {
       throw new ErrorMsg("User is not an approved driver", 400);

@@ -1,5 +1,6 @@
 import { DiscountModel } from "../../../users/models";
 import { Discount, User } from "../../../users/types";
+import { userHasDiscountOfType } from "../../utils/discount.utils";
 
 interface DiscountResponse {
   message: string;
@@ -23,34 +24,25 @@ export const generateDiscount: GenerateDiscount = async ({
   status = false,
 }): Promise<DiscountResponse> => {
   try {
-    let haveNewDiscount: boolean = false;
-
-    const existingDiscount = await DiscountModel.findOne({
-      user_id: user._id,
-      type: type,
-      // is_active: true,
-    });
+    const existingDiscount = await userHasDiscountOfType(user._id, type);
 
     if (existingDiscount) {
       if (existingDiscount.type === "emergencyContactChange")
         return {
-          message:
-            "User already has an active discount of type emergencyContactChange.",
-          haveNewDiscount: (haveNewDiscount = false),
-          // newDiscount: undefined,
+          message: "User already has an active discount of type emergencyContactChange.",
+          haveNewDiscount: false,
         };
 
       if (existingDiscount.type === "emailChange")
         return {
           message: "User already has an active discount of type emailChange.",
-          haveNewDiscount: (haveNewDiscount = false),
-          // newDiscount: undefined,
+          haveNewDiscount: false,
         };
 
-        return {
-          message: "User already has a discount of this type.",
-          haveNewDiscount: (haveNewDiscount = false),
-        };
+      return {
+        message: "User already has a discount of this type.",
+        haveNewDiscount: false,
+      };
     }
 
     const newDiscount = await DiscountModel.create({
@@ -62,7 +54,7 @@ export const generateDiscount: GenerateDiscount = async ({
 
     return {
       message: "Discount generated.",
-      haveNewDiscount: newDiscount ? true : haveNewDiscount,
+      haveNewDiscount: true,
       newDiscount: newDiscount.toObject(),
     };
   } catch (error) {
