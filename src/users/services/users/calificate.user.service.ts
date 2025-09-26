@@ -1,8 +1,8 @@
-import { TripModel } from "../../trips/models";
-import { CalificationsModel } from "../models";
-import { AsyncCustomResponse } from "../../common/types";
-import { ErrorMsg } from "../../common/utils";
-import { TripStatus } from "../../trips/types"; 
+import { TripModel } from "../../../trips/models";
+import { CalificationsModel } from "../../models";
+import { AsyncCustomResponse } from "../../../common/types";
+import { ErrorMsg } from "../../../common/utils";
+import { TripStatus } from "../../../trips/types"; 
 
 export class ReviewService {
   static async calificateUser(
