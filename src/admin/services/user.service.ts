@@ -22,23 +22,33 @@ class UserRepository implements IUserRepository {
   async deleteById(userId: string): Promise<IUser | null> {
     return UserModel.findByIdAndDelete(userId);
   }
+
   /** Devuelve todos los usuarios con paginación y relaciones */
   async findAll(page: number, limit: number): Promise<IUser[]> {
-    return UserModel.find()
-      .skip((page - 1) * limit) // Salta registros según la página
-      .limit(limit) // Limita el número de resultados
-      .populate("driver") // Carga información de driver
-      .populate("device"); // Carga información de device
+    const users = await UserModel.find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("driver")
+      .populate("device")
+      .lean(); // Usamos lean() para obtener un objeto plano
+
+    // Hacemos un cast explícito para decirle a TypeScript que esto es un IUser[]
+    return users.map(user => ({
+      ...user,
+      email: user.email ? { address: user.email.address } : undefined,
+    })) as unknown as IUser[];  // Forzamos el tipo
   }
+
   /** Cuenta todos los documentos de usuarios */
   async countAll(): Promise<number> {
     return UserModel.countDocuments();
   }
+
   /**
    * Busca usuarios según un query y devuelve resultados paginados
    */
   async search(query: string, page: number, limit: number): Promise<IUser[]> {
-    return UserModel.find({
+    const users = await UserModel.find({
       $or: [
         { first_name: { $regex: query, $options: "i" } },
         { last_name: { $regex: query, $options: "i" } },
@@ -55,17 +65,23 @@ class UserRepository implements IUserRepository {
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("driver")
-      .populate("device");
+      .populate("device")
+      .lean(); // Usamos lean() para obtener un objeto plano
+
+    // Hacemos un cast explícito para decirle a TypeScript que esto es un IUser[]
+    return users.map(user => ({
+      ...user,
+      email: user.email ? { address: user.email.address } : undefined,
+    })) as unknown as IUser[];  // Forzamos el tipo
   }
 }
+
 /**
  * Servicio de usuario que expone operaciones de negocio y delega la persistencia a UserRepository.
  */
 export class UserService {
   constructor(private readonly userRepository: IUserRepository = new UserRepository()) {}
-  /**
-   * Elimina un usuario por ID
-   */
+
   async deleteUser(userId: string): AsyncCustomResponse {
     if (!userId) throw new ErrorMsg("ID de usuario es requerido", 400);
 
@@ -79,9 +95,7 @@ export class UserService {
       throw new ErrorMsg("Error al eliminar usuario", 500);
     }
   }
-  /**
-   * Obtiene todos los usuarios con paginación
-   */
+
   async getAll(paginationDto: PaginationDto): AsyncCustomResponse {
     const { pageNumber = 1, pageSize = 10 } = paginationDto;
     const page = Number(pageNumber);
@@ -108,12 +122,9 @@ export class UserService {
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       throw new ErrorMsg("Error al obtener usuarios", 500);
-
     }
   }
-  /**
-   * Busca usuarios por query con paginación
-   */
+
   async search(searchDto: SearchParamsDto & PaginationDto): AsyncCustomResponse {
     const { searchValue, pageNumber = 1, pageSize = 10 } = searchDto;
     const page = Number(pageNumber);
