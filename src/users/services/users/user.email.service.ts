@@ -1,5 +1,3 @@
-// src/services/user.email.service.ts
-
 import { ErrorMsg, generateJWT, extractPayload } from "../../../common/utils";
 import { UserModel } from "../../models";
 import { discountsServices, commonServices } from "..";
@@ -45,7 +43,7 @@ export const UserEmailService = {
       });
 
     const emailVerificationToken = (await generateJWT(
-      { id: userUpdated._id },
+      { id: userUpdated._id.toString() }, // Convertir ObjectId a string
       2592000
     )) as string;
 
@@ -59,9 +57,9 @@ export const UserEmailService = {
     let isEmailSended = false;
     let isSendNotification = false;
 
-    if (newDiscount) {
+    if (newDiscount && newDiscount._id) {
       discountToken = (await generateJWT(
-        { id: newDiscount._id },
+        { id: newDiscount._id.toString() }, // Convertir ObjectId a string
         2592000
       )) as string;
 
@@ -79,7 +77,7 @@ export const UserEmailService = {
     }
 
     return {
-      message: [ `Email actualizado a ${userUpdated.email?.address}.`, message ],
+      message: [`Email actualizado a ${userUpdated.email?.address}.`, message],
       info: {
         isSendNotification,
         isEmailSended,
