@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { isAuth } from "../../common/middlewares";
 import { checkAdmin } from "../../admin/middlewares";
-
 import { UserController } from "../controller/user.controller";
 import { DriverController } from "../controller/driver.controller";
 import { VehicleController } from "../controller/vehicle.controller";
+import { DeleteRequestModel } from "users/models";
+import { DeleteRequestService } from "admin/services";
+import { createDeleteRequestController, getPendingDeleteRequestsController, updateDeleteRequestStatusController,} from "../controller/delete.request.controller";
 
 const adminRoutes = Router();
 
@@ -32,10 +34,10 @@ adminRoutes.get("/users", UserController.getAll);
 adminRoutes.get("/users/search", UserController.search);
 
 /**
- * Elimina un usuario
+ * Desactiva un usuario
  * DELETE /admin/users/:id
  */
-adminRoutes.delete("/users/:id", UserController.delete);
+adminRoutes.delete("/users/:id", UserController.deactivate);
 
 /* =========================
    Rutas de Conductores
@@ -60,10 +62,10 @@ adminRoutes.get("/drivers/search", DriverController.search);
 adminRoutes.put("/drivers/:driverId/approve", DriverController.approve);
 
 /**
- * Elimina un conductor
+ * Desactiva un conductor
  * DELETE /admin/drivers/:id
  */
-adminRoutes.delete("/drivers/:id", DriverController.delete);
+adminRoutes.delete("/drivers/:id", DriverController.desactivate);
 
 /* =========================
    Rutas de Vehículos
@@ -86,5 +88,16 @@ adminRoutes.get("/drivers/:driverId/vehicles", VehicleController.getByDriver);
  * PUT /admin/vehicles/:vehicleId/approve
  */
 adminRoutes.put("/vehicles/:vehicleId/approve", VehicleController.approve);
+
+/**
+ * Elimina un vehículo
+ * DELETE /admin/vehicles/:vehicleId
+ */
+adminRoutes.delete("/vehicles/:vehicleId", VehicleController.deleteByVehicleId);
+
+adminRoutes.post("/delete-request", isAuth, createDeleteRequestController);
+
+adminRoutes.get("/admin/delete-requests", isAuth, checkAdmin, getPendingDeleteRequestsController);
+adminRoutes.put("/admin/delete-requests/:requestId", isAuth, checkAdmin, updateDeleteRequestStatusController);
 
 export default adminRoutes;

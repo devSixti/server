@@ -74,6 +74,7 @@ export const addFunds = async (driverId: string, userData: AddFundsDTO): AsyncCu
         const wompiResponse = await response.json();
 
         return {
+            status: "success",
             message: `Funds added successfully`,
             info: {
                 transaction: wompiResponse.data

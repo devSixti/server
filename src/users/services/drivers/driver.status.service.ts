@@ -11,6 +11,7 @@ export const changeDriverAvailable = async (id: string): AsyncCustomResponse => 
     driver?.updateOne({ is_available: !driver.is_available }).exec();
 
     return {
+      status: "success",
       message: `Driver availability changed to ${driver?.is_available}`,
       info: { is_available: driver?.is_available },
     };
@@ -47,6 +48,7 @@ export const changeDriverRole = async (id: string): AsyncCustomResponse => {
     ).populate("role_id");
 
     return {
+      status: "success",
       message: `Role changed to ${updatedUser?.role?.name}`,
       info: { role: updatedUser?.role_id },
     };

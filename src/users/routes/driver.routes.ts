@@ -10,4 +10,6 @@ router.put("/change-role", driverControllers.changeDriverRole);
 router.put("/change-available", checkDriver, driverControllers.changeDriverAvailable);
 router.get("/my-info", driverControllers.myDriverRequestInfo);
 
+router.get("/vehicles", driverControllers.getDriverVehicle);
+
 export default router;

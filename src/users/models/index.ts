@@ -8,4 +8,4 @@ export { DriverModel } from "./driver.model";
 export { UserModel } from "./user.model";
 export { DiscountModel } from "./discounts.model";
 export { VehicleModel } from "./vehicles.model";
-
+export { DeleteRequestModel } from "./request.deleted.model";

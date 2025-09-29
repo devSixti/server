@@ -48,6 +48,7 @@ export const addPaymentMethod = async (driverId: string, paymentMethodData: Paym
         }
 
         return {
+            status: "success",
             message: `Add payment method`,
             info: { paymentMethod },
         };
@@ -66,6 +67,7 @@ export const getPaymentMethodsByDriverId = async (driverId: string): AsyncCustom
         }
 
         return {
+            status: "success",
             message: `Get payment method successfully`,
             info: { paymentMethods },
         };

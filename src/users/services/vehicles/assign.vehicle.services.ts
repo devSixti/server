@@ -27,6 +27,7 @@ export const assignVehicle = async (
     ).populate("vehicle_selected");
 
     return {
+      status: "success",
       message: `Vehicle assigned to driver`,
       info: { driver },
     };

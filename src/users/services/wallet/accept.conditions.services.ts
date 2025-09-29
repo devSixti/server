@@ -44,6 +44,7 @@ export const acceptConditions = async (
     const { data } = await response.json();
 
     return {
+      status: "success",
       message: `Request successful`,
       info: {
         driverId,

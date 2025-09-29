@@ -37,14 +37,28 @@ export class UserController {
   /**
    * URL: DELETE /admin/users/:userId
    * Método DELETE
-   * Elimina un usuario por ID.
+   * Desactiva un usuario por ID.
    */
-  static delete = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    await userService.deleteUser(userId);
-    res.json({
+  static deactivate = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        status: "error",
+        message: "ID de usuario requerido",
+      });
+    }
+    const result = await userService.deactivateUser(id);
+    if (!result) {
+      return res.status(404).json({
+        status: "error",
+        message: "Usuario no encontrado o ya desactivado",
+      });
+    }
+
+    return res.json({
       status: "success",
-      message: "Usuario eliminado exitosamente",
+      message: result.message,
+      info: result.info,
     });
   });
 }

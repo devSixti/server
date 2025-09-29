@@ -103,6 +103,7 @@ export class TripLifecycleService {
         });
 
         return {
+          status: "success",
           message: "Trip finished successfully",
           info: {
             newTripStatus: trip.status,
@@ -133,6 +134,7 @@ export class TripLifecycleService {
       }
 
       return {
+        status: "success",
         message: `Trip status changed to ${nextStatus}`,
         info: { newTripStatus: trip.status },
       };

@@ -38,13 +38,13 @@ export class TripNegotiationService {
         await tripRequest.updateOne({ status: RequestStatus.NEGOTIATION, counterOffer });
         // notificar pasajero
         await NotificationService.sendToToken(tripRequest.user_info?.device?.token, "New proposal", "A driver proposed a new price for your request", { tripRequestId, counterOffer });
-        return { message: "Trip request proposed successfully", info: { tripRequestId, counterOffer } };
+        return { status: "success", message: "Trip request proposed successfully", info: { tripRequestId, counterOffer } };
       }
 
       if (action === TripRequestActions.REJECT) {
         // Si initiatedBy = driver, update status pending (driver rejected)
         await tripRequest.updateOne({ status: RequestStatus.PENDING });
-        return { message: "Trip request rejected", info: { tripRequestId } };
+        return { status: "success", message: "Trip request rejected", info: { tripRequestId } };
       }
 
       if (action === TripRequestActions.ACCEPT) {
@@ -52,7 +52,7 @@ export class TripNegotiationService {
         // Si la solicitud ya fue aceptada -> verificar existencia de Trip
         if (tripRequest.status === RequestStatus.ACCEPTED) {
           const existingTrip = await TripModel.findOne({ trip_request_id: tripRequestId });
-          if (existingTrip) return { message: "Trip request already accepted", info: { trip: existingTrip } };
+          if (existingTrip) return { status: "success", message: "Trip request already accepted", info: { trip: existingTrip } };
           else throw new ErrorMsg("Trip request accepted previously but trip missing", 400);
         }
 
@@ -79,7 +79,7 @@ export class TripNegotiationService {
         // notificar pasajero
         await NotificationService.sendToToken(tripRequest.user_info?.device?.token, "Your trip request has been accepted!", "A driver is on the way", { newTripId: newTrip._id });
 
-        return { message: "Trip request accepted successfully", info: { newTrip } };
+        return { status: "success", message: "Trip request accepted successfully", info: { newTrip } };
       }
 
       throw new ErrorMsg("Invalid action", 400);

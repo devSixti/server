@@ -68,6 +68,7 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
         const transformedVehicle = transformVehicleData(updatedVehicle as Vehicle);
 
         return {
+          status: "success",
           message: `Vehicle updated successfully.`,
           info: {
             submitted,
@@ -104,6 +105,7 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
     const transformedNewVehicle = transformVehicleData(await VehicleModel.findById(newVehicle._id).lean());
 
     return {
+      status: "success",
       message: `Vehicle ID not found. New vehicle created.`,
       info: {
         submitted,
@@ -128,6 +130,7 @@ export const deleteVehicleById = async (vehicleId: string): AsyncCustomResponse 
     await VehicleModel.findByIdAndDelete(vehicle._id);
 
     return {
+      status: "success",
       message: `Vehicle deleted`,
       info: { vehicle },
     };
@@ -152,6 +155,7 @@ export const getDriverVehicle = async (driverId: string): AsyncCustomResponse =>
     }
 
     return {
+      status: "success",
       message: `Vehicles found`,
       info: { vehicles },
     };

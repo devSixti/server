@@ -1,5 +1,12 @@
 import { ErrorMsg } from "../../../common/utils";
-import { UserModel, DriverModel, DeviceModel, CalificationsModel, VehicleModel } from "../../models";
+import {
+  UserModel,
+  DriverModel,
+  DeviceModel,
+  CalificationsModel,
+  VehicleModel,
+  DeleteRequestModel,
+} from "../../models";
 import { calculateProfile, getAverageCalification } from "../../utils";
 
 /**
@@ -57,34 +64,40 @@ export const UserService = {
   },
 
   /**
-   * Elimina la cuenta del usuario y datos relacionados.
+   * Envia una solicitud de eliminación de cuenta al administrador.
    */
   deleteAccount: async (uid: string) => {
     if (!uid) {
       throw new ErrorMsg("No se encontró el ID del usuario", 401);
     }
-
-    const userDeleted = await UserModel.deleteOne({ _id: uid });
-    if (!userDeleted.deletedCount) {
+    // Verifica si el usuario existe
+    const user = await UserModel.findById(uid);
+    if (!user) {
       throw new ErrorMsg("Usuario no encontrado", 404);
     }
-
-    const deviceDeleted = await DeviceModel.deleteMany({ user_id: uid });
-    const driverDeleted = await DriverModel.deleteOne({ user_id: uid });
-    const vehicleDeleted = await VehicleModel.deleteMany({ driver_id: uid });
-    const calificationsDeleted = await CalificationsModel.deleteMany({
-      from_user_id: uid,
+    // Verifica si ya hay una solicitud activa
+    const existingRequest = await DeleteRequestModel.findOne({
+      user_id: uid,
+      status: "pending",
     });
-
+    if (existingRequest) {
+      throw new ErrorMsg(
+        "Ya existe una solicitud de eliminación pendiente",
+        400
+      );
+    }
+    // Crea una nueva solicitud de eliminación
+    const deletionRequest = await DeleteRequestModel.create({
+      user_id: uid,
+      reason: "Solicitud iniciada por el usuario", 
+      requested_at: new Date(),
+      status: "pending", 
+    });
     return {
-      message: "Cuenta eliminada exitosamente",
+      message: "Solicitud de eliminación enviada al administrador.",
       info: {
-        deleteToken: true,
-        userDeleted,
-        deviceDeleted,
-        driverDeleted,
-        vehicleDeleted,
-        calificationsDeleted,
+        requestId: deletionRequest._id,
+        status: deletionRequest.status,
       },
     };
   },

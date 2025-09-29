@@ -1,4 +1,4 @@
-import { Request, Response,NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { DriverService } from "../services/driver.service";
 
 /**
@@ -42,9 +42,17 @@ export class DriverController {
    * URL: DELETE /admin/drivers/:id
    * Metodo DELETE Elimina un conductor del sistema.
    */
-  static delete = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
-    await DriverService.delete(driverId);
-    res.json({ status: "success", message: "Conductor eliminado exitosamente" });
+  static desactivate = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new Error("El ID del conductor no está definido");
+    }
+    const response = await DriverService.desactivate(id);
+    res.json({
+      status: response.status,
+      message: response.message,
+      data: response.info,
+    });
   });
 }

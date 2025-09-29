@@ -19,6 +19,7 @@ export const myDriverRequestInfo = async (driverId: string): AsyncCustomResponse
         const { criminal_background, license, is_available, status_request } = driver;
 
         return {
+            status: "success",
             message: `Driver found`,
             info: {
                 driver: {

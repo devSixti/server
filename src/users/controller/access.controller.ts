@@ -7,10 +7,15 @@ import { UserEmailService } from "../services/users/user.email.service";
 // ----------------------
 // Auth Controllers
 // ----------------------
-export const authOrCreateNewUserFirstTime: ExpressController = async (req, res, next) => {
+export const authOrCreateNewUserFirstTime: ExpressController = async (
+  req,
+  res,
+  next
+) => {
   try {
     const response = await AuthService.authOrCreateUser(req.body);
-    res.setHeader("x-token", response.info.token);
+    res.setHeader("x-token", response.info.token.accessToken);
+    res.setHeader("x-refresh-token", response.info.token.refreshToken);
     res.status(201).json(response);
   } catch (error) {
     next(error);
@@ -66,16 +71,26 @@ export const logOut: ExpressController = async (req, res, next) => {
 // ----------------------
 export const updateDevice: ExpressController = async (req, res, next) => {
   try {
-    const response = await UserProfileService.updateDevice(req.uid as string, req.body.token);
+    const response = await UserProfileService.updateDevice(
+      req.uid as string,
+      req.body.token
+    );
     res.status(200).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-export const updatePersonalUserInfoAuth: ExpressController = async (req, res, next) => {
+export const updatePersonalUserInfoAuth: ExpressController = async (
+  req,
+  res,
+  next
+) => {
   try {
-    const response = await UserProfileService.updatePersonalInfo(req.uid as string, req.body);
+    const response = await UserProfileService.updatePersonalInfo(
+      req.uid as string,
+      req.body
+    );
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -84,7 +99,10 @@ export const updatePersonalUserInfoAuth: ExpressController = async (req, res, ne
 
 export const saveDocument: ExpressController = async (req, res, next) => {
   try {
-    const response = await UserProfileService.saveDocument(req.uid as string, req.body);
+    const response = await UserProfileService.saveDocument(
+      req.uid as string,
+      req.body
+    );
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -97,7 +115,10 @@ export const saveDocument: ExpressController = async (req, res, next) => {
 export const getUserAuth: ExpressController = async (req, res, next) => {
   try {
     const { isDriver = "false" } = req.query as QueriesParametes;
-    const response = await UserService.getUserProfile(req.uid as string, isDriver);
+    const response = await UserService.getUserProfile(
+      req.uid as string,
+      isDriver
+    );
     res.status(200).json(response);
   } catch (error) {
     next(error);

@@ -35,15 +35,24 @@ export class DriverService {
 
       // Validaciones de campos obligatorios
       const validations: [string | null, string][] = [
-        [driver.user_info?.document?.document_id ?? null, "Falta documento de identidad"],
-        [driver.license.front_picture ?? null, "Falta foto frontal de licencia"],
+        [
+          driver.user_info?.document?.document_id ?? null,
+          "Falta documento de identidad",
+        ],
+        [
+          driver.license.front_picture ?? null,
+          "Falta foto frontal de licencia",
+        ],
         [
           driver.license.expiration_date
             ? driver.license.expiration_date.toISOString()
             : null,
-          "Falta fecha de vencimiento"
+          "Falta fecha de vencimiento",
         ],
-        [driver.criminal_background.picture ?? null, "Falta antecedentes penales"],
+        [
+          driver.criminal_background.picture ?? null,
+          "Falta antecedentes penales",
+        ],
       ];
 
       // Recorre cada validación y lanza error si algún campo es nulo o vacío
@@ -76,7 +85,11 @@ export class DriverService {
         htmlBody: approvedEmailBody(),
       });
       // Retorna respuesta exitosa
-      return { message: "Conductor aprobado exitosamente.", info: { driver } };
+      return {
+        status: "success",
+        message: "Conductor aprobado exitosamente.",
+        info: { driver },
+      };
     } catch (error) {
       // Abort de la transacción en caso de error
       await session.abortTransaction();
@@ -86,13 +99,49 @@ export class DriverService {
     }
   }
   /**
-   * Función para eliminar un conductor
+   * Función para desactivar un conductor
    */
-  static async delete(driverInfo: any): AsyncCustomResponse {
+  static async desactivate(driverId: string): AsyncCustomResponse {
     try {
-      return { message: "Conductor eliminado exitosamente.", info: {} };
+      // Buscar al conductor por su ID y poblar `user_info` de forma segura
+      const driver = await DriverModel.findById(driverId).populate("user_info");
+      if (!driver) {
+        return {
+          status: "error",
+          message: "Conductor no encontrado.",
+          info: {},
+        };
+      }
+      // Cambiar los valores del conductor según lo solicitado
+      driver.is_available = false;
+      driver.status_request = Status.REJECTED;
+      // Desmarcar los documentos y antecedentes como verificados
+      driver.license.verified = false;
+      driver.criminal_background.verified = false;
+      await driver.save();
+      // Si `user_info` existe, actualizar el estado del usuario
+      if (driver.user_info) {
+        const user = await UserModel.findById(driver.user_info._id);
+
+        if (user) {
+          // Cambiar todos los campos 'true' a 'false'
+          user.is_active = false;
+          user.document.verified = false;
+          if (user.email) {
+            user.email.verified = false;
+          }
+          await user.save();
+        }
+      }
+      // eliminar todos los vehículos asociados al conductor
+      await VehicleModel.deleteMany({ driver_id: driver._id });
+      return {
+        status: "success",
+        message: "Conductor desactivado exitosamente.",
+        info: driver,
+      };
     } catch (error) {
-      console.error("Error al eliminar conductor:", error);
+      console.error("Error al desactivar conductor:", error);
       throw error;
     }
   }
@@ -102,7 +151,6 @@ export class DriverService {
   static async getAll(paginationDto: PaginationDto): AsyncCustomResponse {
     try {
       const { pageNumber = 1, pageSize = 10 } = paginationDto;
-
       const page = Number(pageNumber);
       const limit = Number(pageSize);
       // Obtiene el total de conductores
@@ -115,6 +163,7 @@ export class DriverService {
         .populate("vehicles");
 
       return {
+        status: "success",
         message: "Conductores obtenidos correctamente.",
         info: {
           pagination: paginationResults({
@@ -137,38 +186,61 @@ export class DriverService {
   static async search(searchDto: SearchParamsDto): AsyncCustomResponse {
     try {
       const { searchValue } = searchDto;
-      // Busca conductores en la base de datos filtrando por múltiples campos
+      // Busca todos los conductores y los popula con la info del usuario
       let drivers = await DriverModel.find({}).populate({
         path: "user_info",
         match: {
           $or: [
-            { first_name: { $regex: searchValue, $options: "i" } },
+            { first_name: { $regex: searchValue, $options: "i" } }, 
             { last_name: { $regex: searchValue, $options: "i" } },
-            { nick_name: { $regex: searchValue, $options: "i" } },
-            { country: { $regex: searchValue, $options: "i" } },
-            { city: { $regex: searchValue, $options: "i" } },
+            { nick_name: { $regex: searchValue, $options: "i" } }, 
+            { country: { $regex: searchValue, $options: "i" } }, 
+            { city: { $regex: searchValue, $options: "i" } }, 
             { "document.document_id": { $regex: searchValue, $options: "i" } },
             { "document.type": { $regex: searchValue, $options: "i" } },
-            { "email.address": { $regex: searchValue, $options: "i" } },
-            { "phone.country_code": { $regex: searchValue, $options: "i" } },
+            { "email.address": { $regex: searchValue, $options: "i" } }, 
+            { "phone.country_code": { $regex: searchValue, $options: "i" } }, 
             { "phone.number": { $regex: searchValue, $options: "i" } },
           ],
         },
-      });
-      // Filtra para eliminar usuarios nulos (sin información de usuario)
-      drivers = drivers.filter((driver) => driver?.user_info !== null);
-
+      })
+      // Filtra para eliminar conductores donde la info del usuario no se haya poblado
+      drivers = drivers.filter(
+        (d): d is typeof d & { user_info: NonNullable<typeof d.user_info> } =>
+          d.user_info !== null && d.user_info !== undefined
+      );
+      // Separa conductores activos
+      const activeDrivers = drivers.filter(
+        (d) => d.user_info?.is_active === true
+      );
+      // Separa conductores inactivos
+      const inactiveDrivers = drivers.filter(
+        (d) => d.user_info?.is_active === false
+      );
+      // Si hay conductores activos encontrados, devuelve resultado exitoso con paginación
+      if (activeDrivers.length > 0) {
+        return {
+          status: "success",
+          message: "Conductores activos buscados correctamente",
+          info: {
+            pagination: paginationResults({
+              currentCount: activeDrivers.length,
+              totalItems: activeDrivers.length,
+              currentPage: 1,
+              pageSize: activeDrivers.length,
+            }),
+            drivers: activeDrivers,
+          },
+        };
+      }
+      // Si no hay activos pero sí inactivos, lanza un error indicando que existen pero están inactivos
+      if (inactiveDrivers.length > 0) {
+        throw new ErrorMsg("El conductor existe pero está inactivo", 403);
+      }
       return {
-        message: "Conductores buscados correctamente",
-        info: {
-          pagination: paginationResults({
-            currentCount: drivers.length,
-            totalItems: drivers.length,
-            currentPage: 1,
-            pageSize: 1,
-          }),
-          drivers,
-        },
+        status: "success",
+        message: "No se encontraron conductores que coincidan con la búsqueda.",
+        info: { drivers: [] },
       };
     } catch (error) {
       console.error("Error al buscar conductores:", error);

@@ -22,6 +22,7 @@ export const activateNewDiscount = async (
     );
 
     return {
+      status: "success",
       message: "Discount activated successfully.",
       info: { discountUpdated },
     };
