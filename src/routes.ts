@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuth, limiter } from "./common/middlewares";
-import { accessRoutes, discountRoutes, driversRoutes, walletRoutes } from "./users/routes";
+import { discountRoutes, driversRoutes, vehiclesRoutes, walletRoutes, usersRoutes, notificationRoutes } from "./users/routes";
 import adminRoutes from "./admin/routes/admin.routes";
 import commonRoutes from "./common/routes/health.routes";
 import { tripsRoutes } from "./trips/routes";
@@ -12,10 +12,16 @@ app.use(express.json());
 
 app.set("trust proxy", 1);
 
-app.use("/access", accessRoutes);
-app.use("/discounts", discountRoutes);
+// Aquí montamos las rutas
+app.use("/users", usersRoutes);            // antes era "access"
 app.use("/drivers", isAuth, driversRoutes);
+app.use("/discounts", discountRoutes);
 app.use("/wallet", isAuth, checkDriver, walletRoutes);
+app.use("/vehicles", isAuth, vehiclesRoutes);
+app.use("/notifications", isAuth, notificationRoutes);
+
+
+
 app.use("/trips", isAuth, tripsRoutes);
 app.use("/admin", adminRoutes);
 app.use("/webhook", webhookRoutes);

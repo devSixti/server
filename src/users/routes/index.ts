@@ -1,6 +1,9 @@
-import accessRoutes from "./access.routes";
 import discountRoutes from "./discounts.routes";
-import driversRoutes from "./driver.routes";
+import driversRoutes from "./drivers.routes";
+import vehiclesRoutes from "./vehicles.routes";
 import walletRoutes from "./wallet.routes";
+import usersRoutes from "./users.routes";
+import notificationRoutes from "./notification.routes";
 
-export { accessRoutes, discountRoutes, driversRoutes, walletRoutes };
+export { discountRoutes, driversRoutes, vehiclesRoutes, walletRoutes, usersRoutes, notificationRoutes };
+
