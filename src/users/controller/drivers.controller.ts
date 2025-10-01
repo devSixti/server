@@ -1,61 +1,95 @@
-import { driversServices } from "../../users/services";
-import { ExpressController } from "../../common/types";
+import { Request, Response, NextFunction } from "express";
+import { createOrUpdateDriver } from "../services/drivers/create.or.update.driver.service";
+import { myDriverRequestInfo } from "../services/drivers/driver.info.services";
+import { changeDriverAvailable, changeDriverRole,} from "../services/drivers/driver.status.service";
+import { DriverParams, DriverRequestParams, DriverAvailabilityParams, DriverRoleParams,} from "../types/driver.type";
+import { CreateOrUpdateDriverDTO } from "../dto/create.or.update.driver.dto";
 
-// ================== Gestión del Conductor ==================
+/**
+ * Función auxiliar para capturar errores en funciones async
+ * y delegarlos al middleware global de manejo de errores.
+ */
+const catchAsync =
+  (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
 
-export const createOrUpdateDriver: ExpressController = async (req, res, next) => {
-  try {
-    const id = req.uid as string;
-    const newDriverInfo = req.body;
-    const result = await driversServices.createOrUpdateDriver(id, newDriverInfo);
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+/**
+ * Controlador encargado de manejar todas las operaciones sobre drivers
+ */
+export class DriverController {
+  /**
+   * Crear o actualizar un driver
+   */
+  static createOrUpdate = catchAsync(
+    async (
+      req: Request<DriverParams, {}, CreateOrUpdateDriverDTO>,
+      res: Response
+    ) => {
+      const { userId } = req.params;
+      const newDriverInfo = req.body;
 
-export const getDriverVehicle: ExpressController = async (req, res, next) => {
-  try {
-    const driverId = req.driver_uid as string;
-    const result = await driversServices.myDriverRequestInfo(driverId);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+      const result = await createOrUpdateDriver(userId, newDriverInfo);
 
-// ================== Gestión del Rol del Conductor ==================
+      res.status(200).json({
+        status: "exito",
+        message: result.message,
+        data: result.info,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
 
-export const changeDriverRole: ExpressController = async (req, res, next) => {
-  try {
-    const id = req.uid as string;
-    const result = await driversServices.changeDriverAvailable(id);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+  /**
+   * Obtener la información de un driver
+   */
+  static getInfo = catchAsync(
+    async (req: Request<DriverRequestParams>, res: Response) => {
+      const { driverId } = req.params;
 
-// ================== Gestión de Disponibilidad ==================
+      const result = await myDriverRequestInfo(driverId);
 
-export const changeDriverAvailable: ExpressController = async (req, res, next) => {
-  try {
-    const id = req.driver_uid as string;
-    const result = await driversServices.changeDriverAvailable(id);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+      res.status(200).json({
+        status: "exito",
+        message: result.message,
+        data: result.info,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
 
-// ================== Información del Conductor ==================
+  /**
+   * Cambiar la disponibilidad de un driver
+   */
+  static changeAvailability = catchAsync(
+    async (req: Request<DriverAvailabilityParams>, res: Response) => {
+      const { driverId } = req.params;
 
-export const myDriverRequestInfo: ExpressController = async (req, res, next) => {
-  try {
-    const driverId = req.driver_uid as string;
-    const result = await driversServices.myDriverRequestInfo(driverId);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+      const result = await changeDriverAvailable(driverId);
+
+      res.status(200).json({
+        status: "exito",
+        message: result.message,
+        data: result.info,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
+
+  /**
+   * Cambiar el rol de un driver
+   */
+  static changeRole = catchAsync(
+    async (req: Request<DriverRoleParams>, res: Response) => {
+      const { userId } = req.params;
+
+      const result = await changeDriverRole(userId);
+
+      res.status(200).json({
+        status: "exito",
+        message: result.message,
+        data: result.info,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
+}
