@@ -1,6 +1,6 @@
 import { TripRequestModel } from "../models";
 import { TripModel } from "../models";
-import { RequestStatus, TripRequestActions } from "../types";
+import { RequestStatus, TripRequestActions, TripStatus } from "../types";
 import { AsyncCustomResponse } from "../../common/types";
 import { NotificationService } from "../../users/services/notification.service";
 import { DriverModel, DiscountModel } from "../../users/models";
@@ -8,6 +8,7 @@ import { ErrorMsg } from "../../common/utils";
 import { CommissionRate } from "../utils";
 import { TripRequestService } from "./trip.request.service";
 import { getAverageCalification } from "../../users/utils";
+import { TripRequestController } from "trips/controller/tripRequest.controller";
 
 interface NegotiateOptions {
   driverId?: string;
@@ -72,7 +73,7 @@ export class TripNegotiationService {
           discount_id: passengerDiscounts?.length == 0 ? null : passengerDiscounts[0]._id,
           total_fare: tripRequest.price,
           final_fare: finalFare,
-          status: "WAITING_DRIVER",
+          status: TripStatus.WAITING_DRIVER,
           acceptedAt: new Date(),
         });
 

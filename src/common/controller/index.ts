@@ -1,0 +1,1 @@
+export * as commonControllers from "../controller/common.controlles";

@@ -1,4 +1,4 @@
-import { ErrorMsg, generateJWT, extractPayload } from "../../../common/utils";
+import { ErrorMsg, generateTokens, extractPayload } from "../../../common/utils";
 import { UserModel } from "../../models";
 import { discountsServices, commonServices } from "..";
 import { updateEmailBody } from "../../../common/email";
@@ -42,10 +42,10 @@ export const UserEmailService = {
         status: false,
       });
 
-    const emailVerificationToken = (await generateJWT(
-      { id: userUpdated._id.toString() }, // Convertir ObjectId a string
-      2592000
-    )) as string;
+    const { accessToken: emailVerificationToken } = await generateTokens(
+      { id: userUpdated._id.toString() },
+      { accessExpiresIn: 2592000 }
+    );
 
     await commonServices.sendEmail({
       to: email,
@@ -58,10 +58,10 @@ export const UserEmailService = {
     let isSendNotification = false;
 
     if (newDiscount && newDiscount._id) {
-      discountToken = (await generateJWT(
-        { id: newDiscount._id.toString() }, // Convertir ObjectId a string
-        2592000
-      )) as string;
+      const { accessToken: discountToken } = await generateTokens(
+        { id: newDiscount._id.toString() },
+        { accessExpiresIn: 2592000 }
+      );
 
       isEmailSended = await commonServices.sendEmail({
         to: email,

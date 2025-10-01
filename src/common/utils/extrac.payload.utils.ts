@@ -1,6 +1,7 @@
 import { envValues } from "../../common/config";
 import jwt from "jsonwebtoken";
 import { ErrorMsg } from "./errors.message.utils";
+import { verifyToken } from "./generate.jwt.utils";
 
 /**
  * Extrae y verifica el payload de un token JWT.
@@ -11,9 +12,7 @@ export const extractPayload = (token: string): any => {
     if (!token) {
       throw new ErrorMsg("Por favor, proporciona tu token de acceso.", 401);
     }
-    const { jwt_secret: secrets } = envValues;
-    const payload = jwt.verify(token, secrets!) as jwt.JwtPayload;
-    return payload;
+    return verifyToken(token, "access");
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       throw new ErrorMsg("Tu token ha expirado. Por favor, inicia sesión nuevamente.", 401);

@@ -16,7 +16,6 @@ interface Envs {
   google_api_key: string;
 
   port: number;
-  jwt_secret: string;
   access_token_secret: string;
   refresh_token_secret: string;
   dbUrl: string;
@@ -40,7 +39,6 @@ const envsSchema = joi
     GOOGLE_API_KEY: joi.string().optional().empty(""),
 
     PORT: joi.number().integer().max(9999).required().default(3001),
-    JWT_KEY: joi.string().required(),
     DB_URL: joi.string().required(),
     NODE_ENV: joi.string().optional(),
 
@@ -73,7 +71,6 @@ export const envValues: Envs = {
   google_api_key: value.GOOGLE_API_KEY ?? "",
 
   port: value.PORT,
-  jwt_secret: value.JWT_KEY,
   access_token_secret: value.ACCESS_TOKEN_SECRET,
   refresh_token_secret: value.REFRESH_TOKEN_SECRET,
   node_env: value.NODE_ENV ?? "development",

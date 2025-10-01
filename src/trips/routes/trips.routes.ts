@@ -14,7 +14,7 @@ router.use(authMiddleware, checkUser);
 router.post("/requests", TripRequestController.create);
 
 // Negotiation
-router.post("/negotiation", TripNegotiationController.negotiate);
+router.post("/:tripRequestId/negotiation", TripNegotiationController.negotiate);
 
 // Lifecycle
 router.patch("/:tripId/status", TripLifecycleController.changeStatus);
