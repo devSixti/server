@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { TripNegotiationService } from "../services/trip.negotiation.service";
 import { TripRequestActions } from "../types";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from "../middlewares/auth.middleware";
  * al middleware global de manejo de errores.
  */
 const catchAsync =
-  (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
+  (fn: Function) => (req: AuthenticatedRequest, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
 /**
@@ -21,60 +21,79 @@ interface NegotiationBody {
 }
 
 /**
+ * Tipado de params esperado
+ */
+interface NegotiationParams {
+  tripRequestId: string;
+}
+
+/**
  * Controlador encargado de manejar la negociación de viajes
  */
 export class TripNegotiationController {
   /**
    * Permite proponer, rechazar o aceptar una solicitud de viaje.
    */
-  static negotiate = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
-    const { action, counterOffer, initiatedBy } = req.body;
-    const { tripRequestId } = req.params;
+  static negotiate = catchAsync(
+    async (
+      req: AuthenticatedRequest<NegotiationParams, {}, NegotiationBody>,
+      res: Response
+    ) => {
+      const { action, counterOffer, initiatedBy } = req.body;
+      const { tripRequestId } = req.params;
 
-    let driverId = req.driver_uid;
-    let vehicleId = req.vehicle_id;
+      let driverId = req.driver_uid;
+      let vehicleId = req.vehicle_id;
 
-    if (initiatedBy === "passenger") {
-      // Si es pasajero, tomamos driverId y vehicleId de query params
-      driverId = req.query.driverId as string;
-      vehicleId = req.query.vehicleId as string;
-    }
-
-    if (initiatedBy === "driver") {
-      // Para conductor, validar que existan en token
-      if (!driverId) {
-        return res.status(400).json({ status: "error", message: "Driver ID no encontrado en token" });
+      if (initiatedBy === "passenger") {
+        // Si es pasajero, tomamos driverId y vehicleId de query params
+        driverId = req.query.driverId as string;
+        vehicleId = req.query.vehicleId as string;
       }
-      if (!vehicleId) {
-        return res.status(400).json({ status: "error", message: "Vehicle ID no encontrado en token" });
+
+      if (initiatedBy === "driver") {
+        if (!driverId) {
+          return res
+            .status(400)
+            .json({ status: "error", message: "Driver ID no encontrado en token" });
+        }
+        if (!vehicleId) {
+          return res
+            .status(400)
+            .json({ status: "error", message: "Vehicle ID no encontrado en token" });
+        }
+      } else {
+        if (!driverId || !vehicleId) {
+          return res.status(400).json({
+            status: "error",
+            message: "Driver ID y Vehicle ID requeridos para pasajero",
+          });
+        }
       }
-    } else {
-      // Para pasajero, validar que vengan por query params
-      if (!driverId || !vehicleId) {
-        return res.status(400).json({ status: "error", message: "Driver ID y Vehicle ID requeridos para pasajero" });
+
+      if (!tripRequestId) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "TripRequest ID faltante en la URL" });
       }
+
+      const opts = {
+        tripRequestId,
+        action,
+        counterOffer,
+        initiatedBy,
+        driverId,
+        vehicleId,
+      };
+
+      const result = await TripNegotiationService.handleNegotiation(opts);
+
+      res.status(200).json({
+        status: "success",
+        message: result.message,
+        data: result.info,
+        timestamp: new Date().toISOString(),
+      });
     }
-
-    if (!tripRequestId) {
-      return res.status(400).json({ status: "error", message: "TripRequest ID faltante en la URL" });
-    }
-
-    const opts = {
-      tripRequestId,
-      action,
-      counterOffer,
-      initiatedBy,
-      driverId,
-      vehicleId,
-    };
-
-    const result = await TripNegotiationService.handleNegotiation(opts);
-
-    res.status(200).json({
-      status: "success",
-      message: result.message,
-      data: result.info,
-      timestamp: new Date().toISOString(),
-    });
-  });
+  );
 }

@@ -3,19 +3,9 @@ import { User } from "../../users/types";
 
 const userSchema = new Schema<User>(
   {
-    first_name: {
-      type: String,
-      required: false,
-    },
-    last_name: {
-      type: String,
-      required: false,
-    },
-    nick_name: {
-      type: String,
-      required: false,
-      unique: true,
-    },
+    first_name: { type: String },
+    last_name: { type: String },
+    nick_name: { type: String, unique: true },
 
     role_id: {
       type: Schema.Types.ObjectId,
@@ -28,91 +18,56 @@ const userSchema = new Schema<User>(
         type: String,
         required: false,
       },
-      document_id: {
-        type: String,
-        required: false,
-        default: null,
-        unique: false,
-      },
-      front_picture: {
-        type: String,
-        required: false,
-      },
-      back_picture: {
-        type: String,
-        required: false,
-      },
-      verified: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+      document_id: { type: String, default: null },
+      front_picture: String,
+      back_picture: String,
+      verified: { type: Boolean, default: false },
     },
-    picture: {
-      type: String,
-      required: false,
-    },
-    birth_date: {
-      type: Date,
-      required: false,
-    },
-    country: {
-      type: String,
-      required: true,
-      default: "CO",
-    },
-    city: {
-      type: String,
-      required: true,
-      default: "Bogotá",
-    },
+
+    picture: String,
+    birth_date: Date,
+    country: { type: String, default: "CO" },
+    city: { type: String, default: "Bogotá" },
+
     email: {
-      address: {
-        type: String,
-        unique: true,
-        sparse: true,
-        default: null
-      },
-      verified: {
-        type: Boolean,
-        required: true,
-        default: false,
-      },
+      address: { type: String, unique: true, sparse: true, default: null },
+      verified: { type: Boolean, default: false },
     },
+
     phone: {
-      country_code: { type: String, required: false, default: "+57" },
-      // country: { type: String, required: false, default: "CO" },
-      number: { type: String, required: false, unique: true },
+      country_code: { type: String, default: "+57" },
+      number: { type: String, unique: true },
     },
+
     emergency_contact: {
-      country_code: { type: String, required: false },
-      number: { type: String, required: false },
-      name: { type: String, required: false },
+      country_code: String,
+      number: String,
+      name: String,
     },
-    address: { type: String, required: false },
+
+    address: String,
+
     current_location: {
       type: {
-          type: String, // Debe ser "Point"
-          enum: ['Point'], // Solo "Point" está permitido
-          default: "Point",
-          required: false
+        type: String,
+        enum: ["Point"],
+        default: "Point",
       },
-      coordinates: {
-          type: [Number], // Array de números: [longitude, latitude]
-          required: false
-      }
-  },
-    is_active: {
-      type: Boolean,
-      required: true,
-      default: true,
+      coordinates: [Number], // [longitude, latitude]
+    },
+
+    is_active: { type: Boolean, default: true },
+
+    device: {
+      type: Schema.Types.ObjectId,
+      ref: "Device",
+      required: false,
     },
   },
   { timestamps: true }
 );
 
-// virtual atributes
-
+// Virtuals 
 userSchema.virtual("role", {
   ref: "Roles",
   localField: "role_id",
@@ -120,20 +75,11 @@ userSchema.virtual("role", {
   justOne: true,
 });
 
-
 userSchema.virtual("driver", {
   ref: "Drivers",
   localField: "_id",
   foreignField: "user_id",
   justOne: true,
-});
-
-userSchema.virtual("device", {
-  ref: "Device",
-  localField: "_id",
-  foreignField: "user_id",
-  justOne: true,
-
 });
 
 userSchema.virtual("discounts", {
@@ -151,6 +97,5 @@ userSchema.virtual("califications", {
 userSchema.set("toObject", { virtuals: true });
 userSchema.set("toJSON", { virtuals: true });
 userSchema.index({ current_location: "2dsphere" });
-
 
 export const UserModel = model<User>("Users", userSchema);

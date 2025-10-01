@@ -1,30 +1,15 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { TripLifecycleService } from "../services/tripLifecycle.service";
 import { TripStatus } from "../types";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 /**
  * Función para capturar errores en funciones async y delegarlos
  * al middleware global de manejo de errores.
  */
 const catchAsync =
-  (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
+  (fn: Function) => (req: AuthenticatedRequest, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
-
-/**
- * Interfaces para tipar el body de las peticiones
- */
-interface ChangeStatusBody {
-  userId: string;
-  nextStatus: TripStatus;
-}
-
-interface DriverActionBody {
-  driverId: string;
-}
-
-interface CancelBody {
-  userId: string;
-}
 
 /**
  * Controlador encargado del ciclo de vida de los viajes
@@ -34,16 +19,13 @@ export class TripLifecycleController {
    * Cambiar el estado del viaje
    */
   static changeStatus = catchAsync(
-    async (
-      req: Request<{ tripId: string }, {}, ChangeStatusBody>,
-      res: Response
-    ) => {
+    async (req: AuthenticatedRequest<{ tripId: string }, {}, { nextStatus: TripStatus }>, res: Response) => {
       const { tripId } = req.params;
-      const { userId, nextStatus } = req.body;
+      const { nextStatus } = req.body;
 
       const result = await TripLifecycleService.changeStatus(
         tripId,
-        userId,
+        req.uid!,   // viene del token
         nextStatus
       );
 
@@ -60,17 +42,10 @@ export class TripLifecycleController {
    * Marcar que el conductor llegó al punto de encuentro
    */
   static arrived = catchAsync(
-    async (
-      req: Request<{ tripId: string }, {}, DriverActionBody>,
-      res: Response
-    ) => {
+    async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
       const { tripId } = req.params;
-      const { driverId } = req.body;
 
-      const result = await TripLifecycleService.markDriverArrived(
-        tripId,
-        driverId
-      );
+      const result = await TripLifecycleService.markDriverArrived(tripId, req.uid!);
 
       res.status(200).json({
         status: "success",
@@ -85,14 +60,10 @@ export class TripLifecycleController {
    * Iniciar el viaje
    */
   static start = catchAsync(
-    async (
-      req: Request<{ tripId: string }, {}, DriverActionBody>,
-      res: Response
-    ) => {
+    async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
       const { tripId } = req.params;
-      const { driverId } = req.body;
 
-      const result = await TripLifecycleService.startTrip(tripId, driverId);
+      const result = await TripLifecycleService.startTrip(tripId, req.uid!);
 
       res.status(200).json({
         status: "success",
@@ -107,14 +78,10 @@ export class TripLifecycleController {
    * Finalizar el viaje
    */
   static finish = catchAsync(
-    async (
-      req: Request<{ tripId: string }, {}, DriverActionBody>,
-      res: Response
-    ) => {
+    async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
       const { tripId } = req.params;
-      const { driverId } = req.body;
 
-      const result = await TripLifecycleService.finishTrip(tripId, driverId);
+      const result = await TripLifecycleService.finishTrip(tripId, req.uid!);
 
       res.status(200).json({
         status: "success",
@@ -126,17 +93,13 @@ export class TripLifecycleController {
   );
 
   /**
-   * Cancelar el viaje
+   * Cancelar el viaje (driver o passenger)
    */
   static cancel = catchAsync(
-    async (
-      req: Request<{ tripId: string }, {}, CancelBody>,
-      res: Response
-    ) => {
+    async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
       const { tripId } = req.params;
-      const { userId } = req.body;
 
-      const result = await TripLifecycleService.cancelTrip(tripId, userId);
+      const result = await TripLifecycleService.cancelTrip(tripId, req.uid!);
 
       res.status(200).json({
         status: "success",

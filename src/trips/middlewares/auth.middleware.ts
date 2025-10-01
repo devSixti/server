@@ -5,7 +5,12 @@ import { envValues } from "../../common/config";
 import { DriverModel } from "../../users/models";
 
 // Extiende la interfaz Request de Express para incluir info del usuario autenticado
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest<
+  P = {}, // Params
+  ResBody = any, // Response
+  ReqBody = any, // Request body
+  ReqQuery = any // Query
+> extends Request<P, ResBody, ReqBody, ReqQuery> {
   uid?: string;
   driver_uid?: string;
   vehicle_id?: string;
