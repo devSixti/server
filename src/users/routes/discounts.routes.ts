@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { discountsControllers } from "../controller";
+import { discountController } from "../controller";
 
 const router = Router();
 
-router.put("/activate", discountsControllers.activateDiscount);
+// POST /discounts/activate
+router.post("/activate", discountController.DiscountController.activate);
+
+// POST /discounts/generate
+router.post("/generate", discountController.DiscountController.generate);
 
 export default router;

@@ -9,3 +9,21 @@ export interface Discount {
     createdAt?: Date;
     updatedAt?: Date;
 }
+// src/modules/discount/types/discount.types.ts
+
+/**
+ * Cuerpo esperado para la petición de activación de descuento
+ */
+export interface ActivateDiscountBody {
+  token: string;
+}
+
+/**
+ * Cuerpo esperado para la petición de generación de un nuevo descuento
+ */
+export interface GenerateDiscountBody {
+  userId: string;
+  type: string;
+  amount?: number;
+  status?: boolean;
+}

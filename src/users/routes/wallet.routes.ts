@@ -1,14 +1,19 @@
 import { Router } from "express";
-import { walletControllers } from "../../users/controller";
-import { wompiWebhook } from "../../users/controller/webhook.controller";
+import { walletControllers } from "../controller";
 
+const router = Router();
 
-const walletRouter = Router();
+// Aceptar condiciones
+router.post("/:driverId/accept-conditions", walletControllers.DriverWalletController.acceptConditions);
 
-walletRouter.post("/accept-conditions", walletControllers.acceptConditions);
-walletRouter.post("/add-founds",  walletControllers.addFunds);
-walletRouter.get("/get-balance", walletControllers.getBalance);
-walletRouter.post("/webhook/wompi", wompiWebhook);
+// Agregar fondos
+router.post("/:driverId/wallet/add-funds", walletControllers.DriverWalletController.addFunds);
 
+// Consultar balance
+router.get("/wallet/balance/:reference", walletControllers.DriverWalletController.getBalance);
 
-export default walletRouter;
+// Métodos de pago
+router.post("/:driverId/payment-methods", walletControllers.DriverWalletController.addPaymentMethod);
+router.get("/:driverId/payment-methods", walletControllers.DriverWalletController.getPaymentMethodsByDriverId);
+
+export default router;
