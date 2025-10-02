@@ -1,4 +1,4 @@
-import { Driver } from "users/types/driver.type";
+import { Driver } from "./driver.type";
 import { Discount } from "./discount.type";
 import { Device } from "./Device.type";
 import { Phone } from "./phone.type";

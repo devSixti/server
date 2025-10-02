@@ -1,10 +1,11 @@
-import { ObjectId } from "mongoose";
+import { Types } from "mongoose";
+import { WompiPaymentMethods } from "./wompi.payment.method.type";
 
 export interface Transaction {
-    wallet_id: ObjectId;
+    wallet_id: Types.ObjectId;
     amount: number;
-    type: "credit" | "debit";
-    status?: "pending" | "completed" | "failed";
+    type: WompiPaymentMethods;
+    status?: transactionStatus;
     createdAt?: Date;
     updatedAt?: Date;
 }

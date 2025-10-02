@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface Device {
-  userId: Types.ObjectId;
+  user_id: Types.ObjectId;
   token: string;
   createdAt?: Date;
   updatedAt?: Date;

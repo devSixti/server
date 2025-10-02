@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Types } from "mongoose";
 
 export enum WompiPaymentMethods {
     NEQUI = 'NEQUI',
@@ -27,7 +27,7 @@ export interface PaymentMethodsObject {
 export interface PaymentMethod {
     _id?: string;
     token?: string;
-    driverId: Schema.Types.ObjectId;
+    driverId: Types.ObjectId;
     paymentType: string;
     details?: Record<string, any>;
     is_active: boolean;
