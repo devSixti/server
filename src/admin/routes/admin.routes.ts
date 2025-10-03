@@ -37,7 +37,7 @@ adminRoutes.get("/users/search", UserController.search);
  * Desactiva un usuario
  * DELETE /admin/users/:id
  */
-adminRoutes.delete("/users/:id", UserController.deactivate);
+adminRoutes.delete("/users/:userId", UserController.deactivate);
 
 /* =========================
    Rutas de Conductores

@@ -20,7 +20,14 @@ export class DriverVehicleController {
    * URL: PUT /drivers/:driverId/vehicles/:vehicleId/assign
    */
   static assignVehicle = catchAsync(async (req: Request, res: Response) => {
-    const { driverId, vehicleId } = req.params;
+    const driverId = req.driver_uid;
+    const { vehicleId } = req.body
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
+    if (!vehicleId) {
+      return res.status(400).json({ message: "vehicleId es requerido" });
+    }
     const result = await assignVehicle(driverId, vehicleId);
     res.json({ status: "success", data: result });
   });
@@ -30,7 +37,10 @@ export class DriverVehicleController {
    * URL: POST /drivers/:driverId/vehicles
    */
   static addOrUpdateVehicle = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
     const { vehicleId, ...newVehicleInfo } = req.body;
     const result = await addOrUpdateVehicle({ driverId, vehicleId, newVehicleInfo });
     res.json({ status: "success", data: result });
@@ -51,7 +61,10 @@ export class DriverVehicleController {
    * URL: GET /drivers/:driverId/vehicles
    */
   static getDriverVehicle = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
     const result = await getDriverVehicle(driverId);
     res.json({ status: "success", data: result });
   });

@@ -42,10 +42,12 @@ export class DriverController {
    * Obtener la información de un driver
    */
   static getInfo = catchAsync(
-    async (req: Request<DriverRequestParams>, res: Response) => {
-      const { driverId } = req.params;
-
-      const result = await myDriverRequestInfo(driverId);
+    async (req: Request, res: Response) => {
+      const userId = req.uid;
+      if (!userId) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const result = await myDriverRequestInfo(userId);
 
       res.status(200).json({
         status: "exito",
