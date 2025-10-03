@@ -38,7 +38,10 @@ export class TripLifecycleService {
       const trip = await TripModel.findById(tripId)
         .populate({
           path: "driver",
-          populate: { path: "user_info device wallet" },
+          populate: [
+            { path: "user_id", populate: { path: "device" } },
+            { path: "wallet" },
+          ],
         })
         .populate({
           path: "passenger",
@@ -49,8 +52,8 @@ export class TripLifecycleService {
       if (!trip) throw new ErrorMsg("Trip not found", 404);
 
       // permisos para driver o passenger
-      const isDriver = trip.driver_id?.toString() === userId;
-      const isPassenger = trip.passenger_id?.toString() === userId;
+      const isDriver = trip.driver?.user_id?._id?.toString() === userId?.toString();
+      const isPassenger = trip.passenger_id?.toString() === userId?.toString();
 
       if (!isDriver && !isPassenger) {
         throw new ErrorMsg("You are not allowed to modify this trip", 403);
@@ -74,10 +77,18 @@ export class TripLifecycleService {
       if (nextStatus === TripStatus.COMPLETED && !isDriver) {
         throw new ErrorMsg("Only driver can finish the trip", 403);
       }
-      if (nextStatus === TripStatus.CANCELLED && !isDriver && !isPassenger) {
-        throw new ErrorMsg("Only driver or passenger can cancel", 403);
+      if (nextStatus === TripStatus.CANCELLED) {
+        if (isDriver) {
+          // driver siempre puede cancelar
+        } else if (isPassenger) {
+          // pasajero solo puede cancelar antes de que empiece el viaje
+          if (![TripStatus.WAITING_DRIVER, TripStatus.DRIVER_ARRIVED].includes(trip.status)) {
+            throw new ErrorMsg("Passenger cannot cancel once the trip is in progress or completed", 403);
+          }
+        } else {
+          throw new ErrorMsg("Only driver or passenger can cancel", 403);
+        }
       }
-
       // operaciones específicas
       if (nextStatus === TripStatus.COMPLETED) {
         // calcular comisión y actualizar wallet del driver
@@ -103,6 +114,7 @@ export class TripLifecycleService {
         });
 
         return {
+          status: "success",
           message: "Trip finished successfully",
           info: {
             newTripStatus: trip.status,
@@ -133,6 +145,7 @@ export class TripLifecycleService {
       }
 
       return {
+        status: "success",
         message: `Trip status changed to ${nextStatus}`,
         info: { newTripStatus: trip.status },
       };
@@ -142,18 +155,18 @@ export class TripLifecycleService {
   }
 
   // Métodos helper para invocar convenientes (opcional)
-  static async markDriverArrived(tripId: string, driverId: string) {
-    return this.changeStatus(tripId, driverId, TripStatus.DRIVER_ARRIVED, {
+  static async markDriverArrived(tripId: string, userId: string) {
+    return this.changeStatus(tripId, userId, TripStatus.DRIVER_ARRIVED, {
       role: "driver",
     });
   }
-  static async startTrip(tripId: string, driverId: string) {
-    return this.changeStatus(tripId, driverId, TripStatus.IN_PROGRESS, {
+  static async startTrip(tripId: string, userId: string) {
+    return this.changeStatus(tripId, userId, TripStatus.IN_PROGRESS, {
       role: "driver",
     });
   }
-  static async finishTrip(tripId: string, driverId: string) {
-    return this.changeStatus(tripId, driverId, TripStatus.COMPLETED, {
+  static async finishTrip(tripId: string, userId: string) {
+    return this.changeStatus(tripId, userId, TripStatus.COMPLETED, {
       role: "driver",
     });
   }

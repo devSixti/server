@@ -48,6 +48,7 @@ export class TripRequestService {
       }
 
       return {
+        status: "success",
         message: "Trip request created successfully",
         info: {
           notificationsSended: notificationsSended.reduce((a, b) => a + b, 0),

@@ -21,8 +21,8 @@ export class VehicleController {
 
     // Crear una instancia de VehicleService
     const vehicleService = new VehicleService();
-    
-    const vehicle = await vehicleService.approve(vehicleId);  // Llamar al método de la instancia
+
+    const vehicle = await vehicleService.approve(vehicleId); // Llamar al método de la instancia
     res.json({ status: "success", data: vehicle });
   });
 
@@ -34,8 +34,8 @@ export class VehicleController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     // Crear una instancia de VehicleService
     const vehicleService = new VehicleService();
-    
-    const vehicles = await vehicleService.getAll(req.query);  // Llamar al método de la instancia
+
+    const vehicles = await vehicleService.getAll(req.query); // Llamar al método de la instancia
     res.json({ status: "success", data: vehicles });
   });
 
@@ -49,8 +49,29 @@ export class VehicleController {
 
     // Crear una instancia de VehicleService
     const vehicleService = new VehicleService();
-    
-    const vehicles = await vehicleService.getByDriverId(driverId, req.query);  // Llamar al método de la instancia
+
+    const vehicles = await vehicleService.getByDriverId(driverId, req.query); // Llamar al método de la instancia
     res.json({ status: "success", data: vehicles });
+  });
+  /**
+   * URL: DELETE /admin/vehicles/:vehicleId
+   * Método DELETE
+   * Elimina un vehículo por su ID.
+   */
+  static deleteByVehicleId = catchAsync(async (req: Request, res: Response) => {
+    const { vehicleId } = req.params;
+
+    if (!vehicleId) {
+      throw new Error("Falta el ID del vehículo");
+    }
+
+    const vehicleService = new VehicleService();
+    const result = await vehicleService.deleteByVehicleId(vehicleId);
+
+    res.json({
+      status: "success",
+      message: "Vehículo eliminado exitosamente.",
+      data: result,
+    });
   });
 }

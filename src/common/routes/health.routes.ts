@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { commonControllers } from "../../users/controller";
+import { commonControllers } from "../controller";
 
 const commonRouter = Router();
 

@@ -53,6 +53,7 @@ export class ReviewService {
       });
 
       return {
+        status: "success",
         message: "Calificate user success.",
         info: { newCalification },
       };

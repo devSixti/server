@@ -80,6 +80,7 @@ export const getBalance = async (transaccionReference?: string): AsyncCustomResp
 
         // 10. Returns a success response with the fetched wompiTransaction.
         return {
+            status: "success",
             message: `Get balance successful`,
             info: {
                 statusWompiTransaction: wompiTransaction.status,

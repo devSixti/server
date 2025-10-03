@@ -1,6 +1,7 @@
 import { ExpressController, Status } from "../../common/types";
-import { ErrorMsg, extractPayload } from "../../common/utils";
+import { ErrorMsg } from "../../common/utils";
 import { UserModel } from "../../users/models";
+import { verifyToken } from "../utils/generate.jwt.utils";
 
 /**
  * Middleware de autenticación.
@@ -9,83 +10,69 @@ import { UserModel } from "../../users/models";
 
 export const isAuth: ExpressController = async (req, res, next) => {
   try {
-    const token = req.header("x-token") as string;
+    const tokenRaw = req.header("x-token");
 
-    const { id } = extractPayload(token);
+    if (!tokenRaw || typeof tokenRaw !== "string") {
+      console.error("[AUTH] Token no enviado o no es string:", tokenRaw);
+      throw new ErrorMsg("Token de acceso inválido o ausente", 401);
+    }
+
+    console.log("[AUTH] Token recibido:", tokenRaw);
+
+    let payload;
+    try {
+      payload = verifyToken(tokenRaw, "access");
+    } catch (err) {
+      console.error("[AUTH] Error al verificar token:", err);
+      throw new ErrorMsg("Token inválido - No se pudo verificar", 401);
+    }
+
+    console.log("[AUTH] Payload decodificado completo:", payload);
+
+    const { id } = payload;
 
     if (!id) {
+      console.error("[AUTH] ID no presente en el payload:", payload);
       throw new ErrorMsg(
         "Tu token no es válido. No pudimos encontrar tu ID de usuario.",
         401
       );
     }
 
-   const user = await UserModel.findById(id).populate("driver");
+    console.log("[AUTH] Buscando usuario con ID:", id);
+    const user = await UserModel.findById(id).populate("driver");
 
     if (!user) {
+      console.error("[AUTH] Usuario no encontrado para ID:", id);
       throw new ErrorMsg(
         "Usuario no encontrado. Verifica la información e inténtalo de nuevo.",
         404
       );
     }
 
+    console.log("[AUTH] Usuario encontrado:", {
+      id: user.id,
+      is_active: user.is_active,
+      driver: user.driver,
+    });
+
     if (!user.is_active) {
+      console.error("[AUTH] Usuario inactivo:", user.id);
       throw new ErrorMsg("Credenciales inválidas - Usuario inactivo.", 403);
     }
 
-   
     if (user.driver) {
-
-      // if (user.driver.status_request !== Status.ACCEPTED) {
-      //   throw new ErrorMsg("You are not an approved driver", 403);}
-
+      console.log("[AUTH] Usuario tiene conductor:", user.driver.id);
       req.driver_uid = user.driver.id;
-      
+    } else {
+      console.log("[AUTH] Usuario sin conductor asignado.");
     }
 
     req.uid = user.id;
+    console.log("[AUTH] Autenticación completada. UID:", req.uid);
     next();
   } catch (error) {
+    console.error("[AUTH] Error capturado en isAuth:", error);
     next(error);
   }
 };
-
-
-
-
-
-
-// // //? Declara una nueva propiedad uid globalmente en el objeto Request
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       uid?: string;
-//     }
-//   }
-// }
-
-
-
-// //? Valida el JWT. Si el JWT era válido previamente genera uno nuevo para que se almacene en el front-end.
-// export function validationJWT(req: Request, res: Response, next: NextFunction) {
-//   const token = req.header("x-token");
-//   if (!token) {
-//     return res
-//       .status(401)
-//       .json({ status: "invalido", msg: "No se envió ningún token" });
-//   }
-//   try {
-//     if (!envValues.jwt_secret) {
-//       return res.status(500).json({
-//         msg: "Error interno del servidor - Revise variables de entorno.",
-//       });
-//     }
-//     const uid = jwt.verify(token, envValues.jwt_secret!) as jwt.JwtPayload;
-//     req.uid = uid["id"];
-//     return next();
-//   } catch (error) {
-//     return res
-//       .status(423)
-//       .json({ status: "invalido", msg: "Error en el token - Token invalido" });
-//   }
-// }

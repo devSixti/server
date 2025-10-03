@@ -49,6 +49,7 @@ export const createOrUpdateDriver = async (
       );
 
       return {
+        status: "success",
         message: `Driver updated successfully`,
         info: {
           statusDriver: updateDriver ? true : false,
@@ -76,6 +77,7 @@ export const createOrUpdateDriver = async (
     });
 
     return {
+      status: "success",
       message: `Driver created successfully`,
       info: {
         statusDriver: newDriver ? true : false,

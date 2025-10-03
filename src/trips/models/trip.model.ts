@@ -12,7 +12,7 @@ const tripSchema = new Schema<Trip>(
     },
     driver_id: {
       type: Schema.Types.ObjectId,
-      ref: "Drivers", 
+      ref: "Drivers",
       required: true,
     },
     vehicle_id: {
@@ -22,7 +22,7 @@ const tripSchema = new Schema<Trip>(
     },
     trip_request_id: {
       type: Schema.Types.ObjectId,
-      ref: "TripsRequest", 
+      ref: "TripsRequest",
       required: true,
     },
     discount_id: {
@@ -42,9 +42,9 @@ const tripSchema = new Schema<Trip>(
     status: {
       type: String,
       required: true,
-      enum: Object.values(TripStatus), 
+      enum: Object.values(TripStatus),
     },
-    acceptedAt: { 
+    acceptedAt: {
       type: Date, // Fecha en la que se acepta el viaje
     },
   },
@@ -52,16 +52,17 @@ const tripSchema = new Schema<Trip>(
 );
 // Virtuals: relaciones de los viajes con otros modelos
 tripSchema.virtual("driver", {
-  ref: "Drivers", 
-  localField: "driver_id", 
-  foreignField: "_id", 
-  justOne: true, 
+  ref: "Drivers",
+  localField: "driver_id",
+  foreignField: "_id",
+  justOne: true,
 });
 // Virtual para el pasajero del viaje
 tripSchema.virtual("passenger", {
-  ref: "Users", 
-  localField: "passenger_id", 
-  foreignField: "_id", 
+  ref: "Users",
+  localField: "passenger_id",
+  foreignField: "_id",
+  justOne: true,
 });
 // Índices para optimizar las consultas más frecuentes
 tripSchema.index({ passenger_id: 1 }); // Indexado de passenger_id para búsquedas rápidas
