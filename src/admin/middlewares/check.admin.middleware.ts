@@ -32,7 +32,8 @@ export const checkAdmin: ExpressController = async (req, res, next) => {
 
   const user = await UserModel.findById(id).populate("driver");
 
-  if (user?.role_id?.toString() !== adminRole._id.toString()) {
+  if (!user?.role_id?.equals(adminRole._id)) {
+    console.error("[ADMIN CHECK] Rol NO coincide");
     throw new ErrorMsg("No tienes permisos de administrador.", 403);
   }
 

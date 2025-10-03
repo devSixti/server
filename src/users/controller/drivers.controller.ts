@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { createOrUpdateDriver } from "../services/drivers/create.or.update.driver.service";
 import { myDriverRequestInfo } from "../services/drivers/driver.info.services";
-import { changeDriverAvailable, changeDriverRole,} from "../services/drivers/driver.status.service";
-import { DriverParams, DriverRequestParams, DriverAvailabilityParams, DriverRoleParams,} from "../types/driver.type";
+import { changeDriverAvailable, changeDriverRole, } from "../services/drivers/driver.status.service";
+import { DriverParams, DriverRequestParams, DriverAvailabilityParams, DriverRoleParams, } from "../types/driver.type";
 import { CreateOrUpdateDriverDTO } from "../dto/create.or.update.driver.dto";
 
 /**
@@ -21,13 +21,12 @@ export class DriverController {
    * Crear o actualizar un driver
    */
   static createOrUpdate = catchAsync(
-    async (
-      req: Request<DriverParams, {}, CreateOrUpdateDriverDTO>,
-      res: Response
-    ) => {
-      const { userId } = req.params;
+    async (req: Request, res: Response) => {
+      const userId = req.uid;
+      if (!userId) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
       const newDriverInfo = req.body;
-
       const result = await createOrUpdateDriver(userId, newDriverInfo);
 
       res.status(200).json({

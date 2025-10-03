@@ -97,7 +97,7 @@ adminRoutes.delete("/vehicles/:vehicleId", VehicleController.deleteByVehicleId);
 
 adminRoutes.post("/delete-request", isAuth, createDeleteRequestController);
 
-adminRoutes.get("/admin/delete-requests", isAuth, checkAdmin, getPendingDeleteRequestsController);
-adminRoutes.put("/admin/delete-requests/:requestId", isAuth, checkAdmin, updateDeleteRequestStatusController);
+adminRoutes.get("/delete-requests", isAuth, checkAdmin, getPendingDeleteRequestsController);
+adminRoutes.put("/delete-requests/:requestId", isAuth, checkAdmin, updateDeleteRequestStatusController);
 
 export default adminRoutes;

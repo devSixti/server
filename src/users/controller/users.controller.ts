@@ -89,12 +89,9 @@ export class UserController {
    * Obtener el perfil de un usuario (y conductor si aplica)
    */
   static getUserProfile = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const { driverId } = req.query;
-    const result = await UserService.getUserProfile(
-      userId,
-      driverId ? String(driverId) : undefined
-    );
+    const userId = req.uid!;
+    const driverId = req.driver_uid;
+    const result = await UserService.getUserProfile(userId, driverId);
     res.json({ status: "success", data: result });
   });
 
@@ -102,7 +99,7 @@ export class UserController {
    * Eliminar la cuenta de un usuario
    */
   static deleteAccount = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const userId = req.uid!;
     const result = await UserService.deleteAccount(userId);
     res.json({ status: "success", data: result });
   });
@@ -111,7 +108,7 @@ export class UserController {
    * Actualizar el email de un usuario
    */
   static updateEmail = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const userId = req.uid!;
     const { email, emailConfirmation } = req.body;
     const result = await UserEmailService.updateEmail({
       userId,
@@ -125,7 +122,7 @@ export class UserController {
    * Verificar email con token
    */
   static verifyEmail = catchAsync(async (req: Request, res: Response) => {
-    const { token } = req.body;
+    const token = req.query.token || req.body.token;
     const result = await UserEmailService.verifyEmail(token);
     res.json({ status: "exito", data: result });
   });
@@ -134,7 +131,7 @@ export class UserController {
    * Actualizar información personal
    */
   static updatePersonalInfo = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const userId = req.uid!;
     const result = await UserProfileService.updatePersonalInfo(userId, req.body);
     res.json({ status: "success", data: result });
   });
@@ -143,7 +140,7 @@ export class UserController {
    * Guardar documento de identificación
    */
   static saveDocument = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const userId = req.uid!;
     const result = await UserProfileService.saveDocument(userId, req.body);
     res.json({ status: "success", data: result });
   });
@@ -152,7 +149,7 @@ export class UserController {
    * Actualizar o crear el dispositivo asociado a un usuario
    */
   static updateDevice = catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const userId = req.uid!;
     const { token } = req.body;
     const result = await UserProfileService.updateDevice(userId, token);
     res.json({ status: "success", data: result });

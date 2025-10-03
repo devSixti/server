@@ -6,7 +6,7 @@ const driverSchema = new Schema<Driver>(
   {
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       unique: true,
     },
 
@@ -75,7 +75,7 @@ driverSchema.virtual("vehicles", {
 });
 
 driverSchema.virtual("user_info", {
-  ref: "Users",
+  ref: "User",
   localField: "user_id",
   foreignField: "_id",
   justOne: true,

@@ -34,9 +34,12 @@ export const UserService = {
     if (!user) {
       throw new ErrorMsg("Usuario no encontrado", 404);
     }
+    // Extraemos el role para saber si es admin, conductor o usuario
+    const roleName = user.role?.name?.toLowerCase();
 
     let driver = null;
-    if (driver_uid && user.driver) {
+    if (driver_uid && user.driver && roleName !== "admin") {
+      // Solo buscamos driver si NO es admin
       driver = await DriverModel.findOne({ user_id: uid })
         .populate("vehicle_selected")
         .populate("user_info")
@@ -49,6 +52,18 @@ export const UserService = {
 
     const { role, ...userToResponse } = user;
     (userToResponse as any).role_name = role?.name;
+    // Construimos la respuesta según rol
+    if (roleName === "admin") {
+      return {
+        message: "Perfil de administrador obtenido con éxito",
+        info: {
+          isAdmin: true,
+          profilePercentage,
+          averageCalification,
+          admin: userToResponse, 
+        },
+      };
+    }
 
     return {
       message: driver
@@ -58,7 +73,7 @@ export const UserService = {
         isDriver: Boolean(user.driver),
         profilePercentage,
         averageCalification,
-        user: driver ?? userToResponse,
+        ...(driver ? { driver } : { user: userToResponse }),
       },
     };
   },
@@ -89,9 +104,9 @@ export const UserService = {
     // Crea una nueva solicitud de eliminación
     const deletionRequest = await DeleteRequestModel.create({
       user_id: uid,
-      reason: "Solicitud iniciada por el usuario", 
+      reason: "Solicitud iniciada por el usuario",
       requested_at: new Date(),
-      status: "pending", 
+      status: "pending",
     });
     return {
       message: "Solicitud de eliminación enviada al administrador.",
