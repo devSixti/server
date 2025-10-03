@@ -24,7 +24,6 @@ export const extractPayload = (token: string): any => {
     throw new ErrorMsg("El token aún no está activo. Verifica el periodo de validez del token.", 401);
   }
 
-  // Esto es lo que lanza el error 500
   throw new ErrorMsg("Ocurrió un error al verificar el token.", 500);
 }
 
