@@ -1,5 +1,5 @@
 export { WompiPaymentMethods, PaymentMethodsObject, PaymentMethod } from './wompi.payment.method.type';
-export { Wallet } from './wallet.type';
+export type { Wallet } from './wallet.type';
 export { Roles, Role } from './roles.types';
 export type { Device } from "./Device.type";
 export { Driver } from "./driver.type";
