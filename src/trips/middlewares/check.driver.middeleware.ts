@@ -3,7 +3,11 @@ import { ErrorMsg } from "../../common/utils";
 import { DriverModel } from "../../users/models"; 
 
 // Definición de las rutas que se deben omitir de la validación de saldo, Estas rutas no requieren que el conductor tenga saldo suficiente en su billetera
-const SKIP_BALANCE_CHECK_ROUTES = ["/api/wallet/add-founds"];
+const SKIP_BALANCE_CHECK_ROUTES = [
+  "/api/wallet/add-funds",
+  "/api/wallet/payment-methods", 
+  "/api/wallet/accept-conditions"
+];
 
 // Middleware para verificar que el request provenga de un driver válido
 export const checkDriver: ExpressController = async (req, res, next) => {
