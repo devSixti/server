@@ -11,7 +11,7 @@ router.put("/assign", vehiclesControllers.DriverVehicleController.assignVehicle)
 // Agregar o actualizar vehículo
 router.post("/", vehiclesControllers.DriverVehicleController.addOrUpdateVehicle);
 // Eliminar vehículo
-router.delete("/vehicles/:vehicleId", vehiclesControllers.DriverVehicleController.deleteVehicleById);
+router.delete("/:vehicleId",vehiclesControllers.DriverVehicleController.deleteVehicleById);
 // Obtener todos los vehículos del driver
 router.get("/", vehiclesControllers.DriverVehicleController.getDriverVehicle);
 

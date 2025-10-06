@@ -20,7 +20,7 @@ router.get("/email/verify", userControllers.UserController.verifyEmail);
 router.use(isAuth); // todas las siguientes rutas requieren autenticación
 
 // Calificar usuario (nota: el userId calificado viene en el body, no afecta auth)
-router.post("/trips/:tripId/review", userControllers.UserController.calificateUser);
+router.post("/:tripId/review", userControllers.UserController.calificateUser);
 
 // Perfil del usuario autenticado
 router.get("/profile", userControllers.UserController.getUserProfile);

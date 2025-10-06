@@ -4,6 +4,7 @@ import { ErrorMsg } from "../../../common/utils";
 import { AddOrUpdateVehicleDTO } from "../../dto";
 import { transformVehicleData } from "../../helpers";
 import { Vehicle } from "../../types";
+import { DeleteRequestService } from "../../../admin/services"; 
 
 // Agregar o actualizar vehículo
 export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }: AddOrUpdateVehicleDTO): AsyncCustomResponse => {
@@ -118,21 +119,32 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
   }
 };
 
-// ✅ Eliminar vehículo
-export const deleteVehicleById = async (vehicleId: string): AsyncCustomResponse => {
+// Solicitud de eliminación de vehículo
+export const deleteVehicleById = async (
+  driverId: string,
+  vehicleId: string,
+  reason: string
+): AsyncCustomResponse => {
   try {
     const vehicle = await VehicleModel.findById(vehicleId);
-
     if (!vehicle) {
       throw new ErrorMsg("Vehicle not found", 404);
     }
-
-    await VehicleModel.findByIdAndDelete(vehicle._id);
+    const deleteRequest = await DeleteRequestService.createDeleteRequest(
+      "vehicle",
+      driverId,
+      reason,
+      vehicleId
+    );
 
     return {
       status: "success",
-      message: `Vehicle deleted`,
-      info: { vehicle },
+      message: "Delete request sent successfully. Waiting for admin review.",
+      info: {
+        vehicle_id: vehicle._id,
+        request_id: deleteRequest._id,
+        status: deleteRequest.status,
+      },
     };
   } catch (error) {
     throw error;

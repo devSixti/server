@@ -72,4 +72,12 @@ export interface Vehicle {
   pictureTechnicalMechanical?: string;
   expirationDateTechnicalMechanical?: Date;
 
+  delete_request?: {
+    requested: boolean;   
+    reason?: string;   
+    requested_at?: Date;    
+    reviewed_at?: Date;          
+    status: "pending" | "approved" | "rejected" | "cancelled"; 
+  };
+
 }

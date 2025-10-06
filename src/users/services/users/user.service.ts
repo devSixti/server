@@ -8,6 +8,7 @@ import {
   DeleteRequestModel,
 } from "../../models";
 import { calculateProfile, getAverageCalification } from "../../utils";
+import { DeleteRequestService } from "../../../admin/services"; 
 
 /**
  * UserService centraliza la gestión del perfil de usuario
@@ -81,7 +82,7 @@ export const UserService = {
   /**
    * Envia una solicitud de eliminación de cuenta al administrador.
    */
-  deleteAccount: async (uid: string) => {
+  deleteAccount: async (uid: string, reason = "Solicitud iniciada por el usuario") => {
     if (!uid) {
       throw new ErrorMsg("No se encontró el ID del usuario", 401);
     }
@@ -90,29 +91,16 @@ export const UserService = {
     if (!user) {
       throw new ErrorMsg("Usuario no encontrado", 404);
     }
-    // Verifica si ya hay una solicitud activa
-    const existingRequest = await DeleteRequestModel.findOne({
-      user_id: uid,
-      status: "pending",
-    });
-    if (existingRequest) {
-      throw new ErrorMsg(
-        "Ya existe una solicitud de eliminación pendiente",
-        400
-      );
-    }
-    // Crea una nueva solicitud de eliminación
-    const deletionRequest = await DeleteRequestModel.create({
-      user_id: uid,
-      reason: "Solicitud iniciada por el usuario",
-      requested_at: new Date(),
-      status: "pending",
-    });
+    const deleteRequest = await DeleteRequestService.createDeleteRequest(
+      "user",
+      uid,
+      reason
+    );
     return {
       message: "Solicitud de eliminación enviada al administrador.",
       info: {
-        requestId: deletionRequest._id,
-        status: deletionRequest.status,
+        request_id: deleteRequest._id,
+        status: deleteRequest.status,
       },
     };
   },
