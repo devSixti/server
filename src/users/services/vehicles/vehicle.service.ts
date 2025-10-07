@@ -4,7 +4,7 @@ import { ErrorMsg } from "../../../common/utils";
 import { AddOrUpdateVehicleDTO } from "../../dto";
 import { transformVehicleData } from "../../helpers";
 import { Vehicle } from "../../types";
-import { DeleteRequestService } from "../../../admin/services"; 
+import { DeleteRequestService } from "../../../admin/services";
 
 // Agregar o actualizar vehículo
 export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }: AddOrUpdateVehicleDTO): AsyncCustomResponse => {
@@ -121,7 +121,7 @@ export const addOrUpdateVehicle = async ({ driverId, vehicleId, newVehicleInfo }
 
 // Solicitud de eliminación de vehículo
 export const deleteVehicleById = async (
-  driverId: string,
+  userId: string,
   vehicleId: string,
   reason: string
 ): AsyncCustomResponse => {
@@ -132,19 +132,19 @@ export const deleteVehicleById = async (
     }
     const deleteRequest = await DeleteRequestService.createDeleteRequest(
       "vehicle",
-      driverId,
+      userId,
       reason,
       vehicleId
     );
 
     return {
       status: "success",
-      message: "Delete request sent successfully. Waiting for admin review.",
+      message: "Solicitud de eliminación enviada al administrador.",
       info: {
         vehicle_id: vehicle._id,
         request_id: deleteRequest._id,
         status: deleteRequest.status,
-      },
+      }
     };
   } catch (error) {
     throw error;

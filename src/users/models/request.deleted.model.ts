@@ -23,7 +23,7 @@ const deleteRequestSchema = new Schema<IDeleteRequest>(
     },
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true,
     },
     vehicle_id: {
@@ -56,6 +56,14 @@ const deleteRequestSchema = new Schema<IDeleteRequest>(
     response_message: String,
   },
   { timestamps: true }
+);
+
+deleteRequestSchema.index(
+  { user_id: 1, type: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "pending" },
+  }
 );
 
 export const DeleteRequestModel = model<IDeleteRequest>(

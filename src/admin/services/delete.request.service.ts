@@ -1,13 +1,13 @@
 import { DeleteRequestModel, IDeleteRequest } from "../../users/models/request.deleted.model";
-import { VehicleModel, UserModel } from "../../users/models";
+import { VehicleModel, DriverModel } from "../../users/models";
 import { ErrorMsg } from "../../common/utils";
 import { Types } from "mongoose";
-import { UserService } from "../../users/services/users";
+import { UserService } from "../services/user.service";
+import { DriverService } from "../services/driver.service";
 
+const userService = new UserService();
 export class DeleteRequestService {
-  /**
-   * 📦 Crear solicitud de eliminación
-   */
+  // Crear solicitud de eliminación
   static async createDeleteRequest(
     type: "user" | "vehicle",
     requesterId: string,
@@ -45,44 +45,38 @@ export class DeleteRequestService {
         throw new ErrorMsg("Ya tienes una solicitud de eliminación pendiente", 409);
     }
 
-    // 🧾 Crear la solicitud
-    const deleteRequest = await DeleteRequestModel.create({
+    // Crear la solicitud
+    const payload: Partial<IDeleteRequest> = {
       type,
       user_id: new Types.ObjectId(requesterId),
-      ...(type === "vehicle" ? { vehicle_id: new Types.ObjectId(targetId!) } : {}),
       reason,
       requested_at: new Date(),
       status: "pending",
-    });
+    };
+    if (type === "vehicle" && targetId) {
+      payload.vehicle_id = new Types.ObjectId(targetId);
+    }
+    const deleteRequest = await DeleteRequestModel.create(payload);
 
     return deleteRequest;
   }
 
-  /**
-   * 📋 Obtener solicitudes pendientes (opcionalmente por tipo)
-   */
+  // Obtener solicitudes pendientes (opcionalmente por tipo)
   static async getPendingRequests(type?: "user" | "vehicle") {
     const filter: any = { status: "pending" };
     if (type) filter.type = type;
 
     return DeleteRequestModel.find(filter)
-      .populate("user_id", "first_name last_name email")
+      .populate({ path: "user_id", select: "first_name last_name email", populate: { path: "driver", select: "license.status_request" } })
       .populate("vehicle_id", "plates brand model")
       .sort({ requested_at: -1 })
       .lean();
   }
 
-  /**
-   * ⚙️ Actualizar estado de solicitud (approve/reject)
-   * Si se aprueba:
-   * - Usuario → se desactiva (no se elimina)
-   * - Vehículo → se elimina del sistema
-   */
-  static async updateRequestStatus(
+  //  Aprueba una solicitud de eliminación
+  static async approveRequest(
     requestId: string,
-    status: "approved" | "rejected",
-    adminId: string,
-    responseMessage?: string
+    adminId: string
   ): Promise<IDeleteRequest> {
     if (!Types.ObjectId.isValid(requestId))
       throw new ErrorMsg("ID de solicitud inválido", 400);
@@ -91,29 +85,31 @@ export class DeleteRequestService {
 
     const request = await DeleteRequestModel.findById(requestId);
     if (!request) throw new ErrorMsg("Solicitud no encontrada", 404);
+    if (request.status !== "pending")
+      throw new ErrorMsg("La solicitud ya fue revisada", 400);
 
-    // Actualizar estado y trazabilidad
-    request.status = status;
+    request.status = "approved";
     request.reviewed_at = new Date();
     request.reviewed_by = new Types.ObjectId(adminId);
-    if (responseMessage) request.response_message = responseMessage;
+
     await request.save();
 
-    // 🟢 Si se aprueba
-    if (status === "approved") {
-      if (request.type === "vehicle" && request.vehicle_id) {
-        const vehicle = await VehicleModel.findById(request.vehicle_id);
-        if (vehicle) {
-          await VehicleModel.deleteOne({ _id: vehicle._id }); 
-        }
-      }
-
-      if (request.type === "user" && request.user_id) {
-        // Usa tu servicio existente
-        await UserService.deleteAccount(request.user_id.toString());
-      }
+    if (request.type === "vehicle" && request.vehicle_id) {
+      await VehicleModel.deleteOne({ _id: request.vehicle_id });
     }
 
+    if (request.type === "user") {
+      const userId = request.user_id.toString();
+      const driver = await DriverModel.findOne({ user_id: new Types.ObjectId(userId) });
+      if (driver) {
+        // Si tiene cuenta de conductor, desactivar conductor y usuario
+        await DriverService.desactivate(driver._id.toString());
+      } else {
+        // Si no es conductor, solo desactivar usuario
+        await userService.deactivateUser(userId);
+      }
+    }
+    await request.deleteOne();
     return request;
   }
 }

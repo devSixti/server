@@ -26,7 +26,7 @@ router.post("/:tripId/review", userControllers.UserController.calificateUser);
 router.get("/profile", userControllers.UserController.getUserProfile);
 
 // Eliminar cuenta del usuario autenticado
-router.delete("/", userControllers.UserController.deleteAccount);
+router.delete("/delete-account", userControllers.UserController.deleteAccount);
 
 // Actualizar Email
 router.put("/email", userControllers.UserController.updateEmail);

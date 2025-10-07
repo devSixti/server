@@ -99,10 +99,17 @@ export class UserController {
    * Eliminar la cuenta de un usuario
    */
   static deleteAccount = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.uid!;
-    const result = await UserService.deleteAccount(userId);
-    res.json({ status: "success", data: result });
+  const userId = req.uid!;
+  const { reason } = req.body;
+
+  const result = await UserService.deleteAccount(userId, reason);
+  res.status(201).json({
+    status: "success",
+    message: result.message,
+    data: result.info,
+    timestamp: new Date().toISOString(),
   });
+});
 
   /**
    * Actualizar el email de un usuario

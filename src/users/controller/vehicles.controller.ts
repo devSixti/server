@@ -3,8 +3,9 @@ import { assignVehicle } from "../services/vehicles/assign.vehicle.services";
 import {
   addOrUpdateVehicle,
   getDriverVehicle,
+  deleteVehicleById
 } from "../services/vehicles/vehicle.service";
-import { DeleteRequestService } from "../../admin/services"; 
+import { DeleteRequestService } from "../../admin/services";
 
 /**
  * catchAsync: helper para manejar errores async
@@ -45,35 +46,24 @@ export class DriverVehicleController {
   });
 
   /**
-   * 🔹 Solicita eliminación de un vehículo (no lo borra directamente)
-   * URL: DELETE /drivers/:driverId/vehicles/:vehicleId
-   * BODY: { reason: string }
+   * Solicita eliminación de un vehículo (no lo borra directamente)
+   * URL: DELETE /drivers/:driverId/vehicles/:vehicleId BODY: { reason: string }
    */
   static deleteVehicleById = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.uid;
     const { vehicleId } = req.params;
     const { reason } = req.body;
-    const userId = req.uid;
 
+    if (!userId) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
     if (!reason || reason.trim().length < 5) {
       return res.status(400).json({
-        message:
-          "Debes especificar un motivo válido para eliminar el vehículo (mínimo 5 caracteres).",
+        message: "Debes proporcionar un motivo válido (mínimo 5 caracteres)",
       });
     }
-
-    // Crear solicitud de eliminación
-    const deleteRequest = await DeleteRequestService.createDeleteRequest(
-      userId!,
-      reason,
-      "vehicle",
-      vehicleId
-    );
-
-    res.status(201).json({
-      status: "success",
-      message: "Solicitud de eliminación de vehículo enviada correctamente.",
-      data: deleteRequest,
-    });
+    const result = await deleteVehicleById(userId, vehicleId, reason);
+    res.status(201).json(result);
   });
 
   static getDriverVehicle = catchAsync(async (req: Request, res: Response) => {
