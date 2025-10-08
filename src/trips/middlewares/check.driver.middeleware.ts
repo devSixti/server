@@ -1,12 +1,13 @@
-import { ExpressController, Status } from "../../common/types"; 
+import { ExpressController, Status } from "../../common/types";
 import { ErrorMsg } from "../../common/utils";
-import { DriverModel } from "../../users/models"; 
+import { DriverModel } from "../../users/models";
 
 // Definición de las rutas que se deben omitir de la validación de saldo, Estas rutas no requieren que el conductor tenga saldo suficiente en su billetera
 const SKIP_BALANCE_CHECK_ROUTES = [
   "/api/wallet/add-funds",
-  "/api/wallet/payment-methods", 
-  "/api/wallet/accept-conditions"
+  "/api/wallet/payment-methods",
+  "/api/wallet/accept-conditions",
+  "/api/wallet/balance"
 ];
 
 // Middleware para verificar que el request provenga de un driver válido
@@ -20,9 +21,9 @@ export const checkDriver: ExpressController = async (req, res, next) => {
 
     // Buscar al conductor en la base de datos usando el `driver_id`, Se usa `.populate()` para cargar las relaciones asociadas con el conductor: información del usuario, vehículo seleccionado, y billetera
     const driver = await DriverModel.findById(driver_id)
-      .populate("user_info") 
-      .populate("vehicle_selected")  
-      .populate("wallet"); 
+      .populate("user_info")
+      .populate("vehicle_selected")
+      .populate("wallet");
     if (!driver) {
       throw new ErrorMsg(
         "No se encontró el conductor. Verifique la información y vuelva a intentarlo.",
@@ -36,12 +37,12 @@ export const checkDriver: ExpressController = async (req, res, next) => {
     ) {
       throw new ErrorMsg("El documento del conductor es obligatorio.", 400);
     }
-
-    // Validación del saldo en la billetera del conductor
-    if (
-      !SKIP_BALANCE_CHECK_ROUTES.includes(req.originalUrl) &&  // Verificamos si la ruta no está en las rutas de excepción
-      driver.wallet.balance <= 0  // Si el saldo del conductor es 0 o menor, lanzamos un error
-    ) {
+    // Validación del saldo en la billetera del conductor 
+    const normalizedUrl = req.originalUrl.replace(/\/+/g, "/");
+    const shouldSkip = SKIP_BALANCE_CHECK_ROUTES.some((route) =>
+      normalizedUrl.startsWith(route)
+    );
+    if (!shouldSkip && driver.wallet.balance <= 0) {
       throw new ErrorMsg(
         "El conductor no tiene suficiente saldo para proponer este precio.",
         403

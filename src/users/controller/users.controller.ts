@@ -58,25 +58,23 @@ export class UserController {
   });
 
   /**
-   * Calificar a un usuario (pasajero <-> conductor)
+   * Calificar a un usuario
    */
   static calificateUser = catchAsync(async (req: Request, res: Response) => {
     const { tripId } = req.params;
-    const { userId, comment, rating } = req.body;
-
+    const { comment, rating } = req.body;
+    const userId = req.uid; 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: "error",
-        message: "El campo userId es obligatorio",
+        message: "No autorizado: no se encontró el userId en el token.",
         timestamp: new Date().toISOString(),
       });
     }
-
     const result = await ReviewService.calificateUser(userId, tripId, {
       comment,
       rating,
     });
-
     res.status(201).json({
       status: "success",
       message: result.message,
@@ -99,17 +97,17 @@ export class UserController {
    * Eliminar la cuenta de un usuario
    */
   static deleteAccount = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.uid!;
-  const { reason } = req.body;
+    const userId = req.uid!;
+    const { reason } = req.body;
 
-  const result = await UserService.deleteAccount(userId, reason);
-  res.status(201).json({
-    status: "success",
-    message: result.message,
-    data: result.info,
-    timestamp: new Date().toISOString(),
+    const result = await UserService.deleteAccount(userId, reason);
+    res.status(201).json({
+      status: "success",
+      message: result.message,
+      data: result.info,
+      timestamp: new Date().toISOString(),
+    });
   });
-});
 
   /**
    * Actualizar el email de un usuario

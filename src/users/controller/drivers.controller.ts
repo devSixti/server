@@ -79,18 +79,15 @@ export class DriverController {
   /**
    * Cambiar el rol de un driver
    */
-  static changeRole = catchAsync(
-    async (req: Request<DriverRoleParams>, res: Response) => {
-      const { userId } = req.params;
+  static changeRole = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.uid;
+    const result = await changeDriverRole(userId!);
 
-      const result = await changeDriverRole(userId);
-
-      res.status(200).json({
-        status: "exito",
-        message: result.message,
-        data: result.info,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  );
+    res.status(200).json({
+      status: "exito",
+      message: result.message,
+      data: result.info,
+      timestamp: new Date().toISOString(),
+    });
+  });
 }
