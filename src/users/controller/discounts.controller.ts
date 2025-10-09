@@ -20,19 +20,22 @@ export class DiscountController {
    * Activa un descuento a partir de un token recibido en el body
    */
   static activate = catchAsync(
-    async (req: Request<{}, {}, ActivateDiscountBody>, res: Response) => {
-      const { token } = req.body;
+  async (req: Request<{}, {}, ActivateDiscountBody>, res: Response) => {
+    console.log("[DISCOUNT] Body recibido en activate:", req.body);
+    const { token } = req.body;
+    console.log("[DISCOUNT] Token recibido para activar:", token);
 
-      const result = await activateNewDiscount(token);
+    const result = await activateNewDiscount(token);
 
-      res.status(200).json({
-        status: "exito",
-        message: result.message,
-        data: result.info,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  );
+    res.status(200).json({
+      status: "exito",
+      message: result.message,
+      data: result.info,
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
+
 
   /**
    * Genera un nuevo descuento para un usuario

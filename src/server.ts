@@ -10,6 +10,11 @@ const server: Application = express();
 server.use(express.json());
 server.use(cors(corsValues));
 
+// ✅ Ruta base de prueba
+server.get("/", (req, res) => {
+    res.send("🚀 Servidor activo y corriendo correctamente a través de Ngrok!");
+});
+
 // Routes
 server.use("/api", limiter, appRoutes);
 

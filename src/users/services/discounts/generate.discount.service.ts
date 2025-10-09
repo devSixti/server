@@ -1,11 +1,13 @@
 import { DiscountModel } from "../../../users/models";
 import { Discount, User } from "../../../users/types";
 import { userHasDiscountOfType } from "../../utils/discount.utils";
+import { generateTokens } from "../../../common/utils/generate.jwt.utils";
 
 interface DiscountResponse {
   message: string;
   haveNewDiscount: boolean;
   newDiscount?: Discount;
+  token?: string;
 }
 
 interface GenerateDiscount {
@@ -51,11 +53,16 @@ export const generateDiscount: GenerateDiscount = async ({
       amount: amount,
       is_active: status,
     });
+    const { accessToken: token } = generateTokens(
+      { id: newDiscount._id },
+      { accessExpiresIn: "15m" }
+    );
 
     return {
       message: "Discount generated.",
       haveNewDiscount: true,
       newDiscount: newDiscount.toObject(),
+      token,
     };
   } catch (error) {
     throw error;

@@ -1,33 +1,43 @@
 import { Router } from "express";
 import { userControllers } from "../controller";
+import { isAuth } from "../../common/middlewares"; 
 
 const router = Router();
 
-// Auth
+// ====================
+// Rutas públicas
+// ====================
+
 router.post("/auth", userControllers.UserController.authOrCreateUser);
 router.post("/logout", userControllers.UserController.logout);
 router.post("/verify-phone", userControllers.UserController.verifyPhone);
+router.get("/email/verify", userControllers.UserController.verifyEmail);
 
-// Calificar usuario
-router.post("/trips/:tripId/review", userControllers.UserController.calificateUser);
+// ====================
+// Rutas protegidas (requieren token)
+// ====================
 
-// Perfil usuario
-router.get("/:userId/profile", userControllers.UserController.getUserProfile);
+router.use(isAuth); // todas las siguientes rutas requieren autenticación
 
-// Eliminar usuario
-router.delete("/:userId", userControllers.UserController.deleteAccount);
+// Calificar usuario (nota: el userId calificado viene en el body, no afecta auth)
+router.post("/:tripId/review", userControllers.UserController.calificateUser);
 
-// Email
-router.put("/:userId/email", userControllers.UserController.updateEmail);
-router.post("/email/verify", userControllers.UserController.verifyEmail);
+// Perfil del usuario autenticado
+router.get("/profile", userControllers.UserController.getUserProfile);
 
-// Información personal
-router.put("/:userId/personal-info", userControllers.UserController.updatePersonalInfo);
+// Eliminar cuenta del usuario autenticado
+router.delete("/delete-account", userControllers.UserController.deleteAccount);
+
+// Actualizar Email
+router.put("/email", userControllers.UserController.updateEmail);
+
+// Actualizar Información personal
+router.put("/personal-info", userControllers.UserController.updatePersonalInfo);
 
 // Documentos
-router.post("/:userId/document", userControllers.UserController.saveDocument);
+router.post("/document", userControllers.UserController.saveDocument);
 
 // Device
-router.put("/:userId/device", userControllers.UserController.updateDevice);
+router.put("/device", userControllers.UserController.updateDevice);
 
 export default router;

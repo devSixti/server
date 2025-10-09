@@ -10,7 +10,9 @@ import { verifyToken } from "../utils/generate.jwt.utils";
 
 export const isAuth: ExpressController = async (req, res, next) => {
   try {
-    const tokenRaw = req.header("x-token");
+    const tokenRaw =
+      req.header("x-token") ||
+      req.header("authorization")?.replace("Bearer ", "");
 
     if (!tokenRaw || typeof tokenRaw !== "string") {
       console.error("[AUTH] Token no enviado o no es string:", tokenRaw);

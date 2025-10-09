@@ -40,14 +40,14 @@ export class UserController {
    * Desactiva un usuario por ID.
    */
   static deactivate = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    if (!id) {
+    const { userId } = req.params;
+    if (!userId) {
       return res.status(400).json({
         status: "error",
         message: "ID de usuario requerido",
       });
     }
-    const result = await userService.deactivateUser(id);
+    const result = await userService.deactivateUser(userId);
     if (!result) {
       return res.status(404).json({
         status: "error",

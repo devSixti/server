@@ -1,8 +1,9 @@
 import { envValues } from "../../common/config";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 
 interface AuthPayload {
-  id?: string;
+  id?: string | Types.ObjectId;
 }
 
 const generateToken = (
