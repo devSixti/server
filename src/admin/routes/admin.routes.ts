@@ -57,9 +57,9 @@ adminRoutes.get("/drivers/search", DriverController.search);
 
 /**
  * Aprueba un conductor
- * PUT /admin/drivers/:driverId/approve
+ * PATCH /admin/drivers/:driverId/approve
  */
-adminRoutes.put("/drivers/:driverId/approve", DriverController.approve);
+adminRoutes.patch("/drivers/:driverId/approve", DriverController.approve);
 
 /**
  * Desactiva un conductor

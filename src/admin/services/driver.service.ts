@@ -1,6 +1,6 @@
 import { DriverModel, UserModel, VehicleModel } from "../../users/models";
 import { commonServices } from "../../users/services";
-import { approvedEmailBody, rejectedEmailBody } from "../emails";
+import { approvedEmailBody, rejectedEmailBody } from "../../emails";
 import { PaginationDto, SearchParamsDto } from "../../common/dto";
 import { AsyncCustomResponse, Status } from "../../common/types";
 import { ErrorMsg, paginationResults } from "../../common/utils";
@@ -8,10 +8,8 @@ import { validateField } from "../../common/helpers";
 import { RoleModel } from "../../users/models";
 
 export class DriverService {
-  /**
-   * Función para aprobar un conductor
-   * @param driverId - ID del conductor a aprobar
-   * @returns AsyncCustomResponse con información del conductor aprobado
+    /**
+   * Aprobar conductor
    */
   static async approve(driverId: string): AsyncCustomResponse {
     // Inicia una sesión de MongoDB para manejo de transacciones
@@ -29,34 +27,60 @@ export class DriverService {
         throw new ErrorMsg("Conductor no encontrado.", 404);
       }
 
-      // Validación: si ya fue aprobado, lanza error 400
-      if (driver.user_info?.document?.verified) {
+       // Si ya está aprobado, evita duplicar aprobación
+       if (driver.status_request === Status.ACCEPTED) {
         throw new ErrorMsg("El conductor ya está aprobado.", 400);
       }
 
-      // Validaciones de campos obligatorios
-      const validations: [string | null, string][] = [
-        [driver.user_info?.document?.document_id ?? null, "Falta documento de identidad"],
-        [driver.license.front_picture ?? null, "Falta foto frontal de licencia"],
-        [
-          driver.license.expiration_date
-            ? driver.license.expiration_date.toISOString()
-            : null,
-          "Falta fecha de vencimiento",
-        ],
-        [driver.criminal_background.picture ?? null, "Falta antecedentes penales"],
-      ];
+      // --- Validaciones de campos obligatorios ---
+      const missingFields: string[] = [];
 
-      // Recorre cada validación y lanza error si algún campo es nulo o vacío
-      validations.forEach(([field, msg]) => validateField(field, msg));
+      if (!driver.license?.front_picture)
+        missingFields.push("Falta la foto frontal de la licencia.");
+      if (!driver.license?.back_picture)
+        missingFields.push("Falta la foto trasera de la licencia.");
+      if (!driver.license?.expiration_date)
+        missingFields.push("Falta la fecha de vencimiento de la licencia.");
+      else if (new Date(driver.license.expiration_date) < new Date())
+        missingFields.push("La licencia está vencida.");
+      if (!driver.criminal_background?.picture)
+        missingFields.push("Falta el comprobante de antecedentes judiciales.");
 
-      // Buscar el role "driver"
-      const driverRole = await RoleModel.findOne({ name: "driver" });
-      if (!driverRole) {
-        throw new ErrorMsg("Rol 'driver' no encontrado en la base de datos.", 500);
+      // Si hay errores → rechazar solicitud
+      if (missingFields.length > 0) {
+        driver.status_request = Status.REJECTED;
+        driver.is_available = false;
+        driver.license.verified = false;
+        driver.criminal_background.verified = false;
+
+        await driver.save({ session });
+        await session.commitTransaction();
+        session.endSession();
+
+        // Enviar correo de rechazo detallado
+        if (driver.user_info?.email?.address) {
+          await commonServices.sendEmail({
+            to: driver.user_info.email.address,
+            subject: "Solicitud rechazada",
+            htmlBody: rejectedEmailBody(
+              `${driver.user_info?.first_name} ${driver.user_info?.last_name}`,
+              missingFields //  muestra el detalle del rechazo
+            ),
+          });
+        }
+
+        return {
+          status: "error",
+          message: "Conductor rechazado automáticamente por datos incompletos.",
+          info: { driver, missingFields },
+        };
       }
 
-      // Actualizar el usuario con documento verificado y role_id
+      // --- Si todo está correcto → aprobar ---
+      const driverRole = await RoleModel.findOne({ name: "driver" });
+      if (!driverRole)
+        throw new ErrorMsg("Rol 'driver' no encontrado en la base de datos.", 500);
+
       await UserModel.findByIdAndUpdate(
         driver.user_info!._id,
         {
@@ -66,25 +90,25 @@ export class DriverService {
         { session }
       );
 
-      // Actualizaciones al modelo de conductor
       driver.license.verified = true;
       driver.criminal_background.verified = true;
       driver.is_available = true;
       driver.status_request = Status.ACCEPTED;
 
-      // Guarda los cambios en la base de datos dentro de la transacción
       await driver.save({ session });
-
-      // Commit de la transacción
       await session.commitTransaction();
       session.endSession();
 
-      // Enviar correo de aprobación fuera de la transacción
-      await commonServices.sendEmail({
-        to: driver.user_info?.email?.address || "",
-        subject: "Solicitud aprobada",
-        htmlBody: approvedEmailBody(),
-      });
+      // Enviar correo de aprobación
+      if (driver.user_info?.email?.address) {
+        await commonServices.sendEmail({
+          to: driver.user_info.email.address,
+          subject: "Solicitud aprobada",
+          htmlBody: approvedEmailBody(
+            `${driver.user_info?.first_name} ${driver.user_info?.last_name}`
+          ),
+        });
+      }
 
       return {
         status: "success",
@@ -94,10 +118,11 @@ export class DriverService {
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
-      console.error("Error al aprobar conductor:", error);
+      console.error("Error al aprobar/rechazar conductor:", error);
       throw error;
     }
   }
+
   /**
    * Función para desactivar un conductor
    */

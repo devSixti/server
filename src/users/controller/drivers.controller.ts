@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { createOrUpdateDriver } from "../services/drivers/create.or.update.driver.service";
 import { myDriverRequestInfo } from "../services/drivers/driver.info.services";
 import { changeDriverAvailable, changeDriverRole, } from "../services/drivers/driver.status.service";
-import { DriverParams, DriverRequestParams, DriverAvailabilityParams, DriverRoleParams, } from "../types/driver.type";
+import {  DriverAvailabilityParams, DriverRoleParams, } from "../types/driver.type";
 import { CreateOrUpdateDriverDTO } from "../dto/create.or.update.driver.dto";
 
 /**
@@ -20,23 +20,37 @@ export class DriverController {
   /**
    * Crear o actualizar un driver
    */
-  static createOrUpdate = catchAsync(
-    async (req: Request, res: Response) => {
-      const userId = req.uid;
-      if (!userId) {
-        return res.status(401).json({ message: "Usuario no autenticado" });
-      }
-      const newDriverInfo = req.body;
-      const result = await createOrUpdateDriver(userId, newDriverInfo);
-
-      res.status(200).json({
-        status: "exito",
+  static createOrUpdate = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.uid;
+    if (!userId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+  
+    const newDriverInfo = req.body;
+    const result = await createOrUpdateDriver(userId, newDriverInfo);
+  
+    // Si el servicio devuelve error, respondemos con 422 o 400
+    if (result.status === "error") {
+      // 422: datos inválidos, 400: request mal formado
+      const statusCode = result.info?.missingFields ? 422 : 400;
+  
+      return res.status(statusCode).json({
+        status: "error",
         message: result.message,
         data: result.info,
         timestamp: new Date().toISOString(),
       });
     }
-  );
+  
+    // Si todo salió bien
+    res.status(201).json({
+      status: "exito",
+      message: result.message,
+      data: result.info,
+      timestamp: new Date().toISOString(),
+    });
+  });
+  
 
   /**
    * Obtener la información de un driver
