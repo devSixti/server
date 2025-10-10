@@ -9,10 +9,9 @@ export interface Discount {
     createdAt?: Date;
     updatedAt?: Date;
 }
-// src/modules/discount/types/discount.types.ts
 
 /**
- * Cuerpo esperado para la petición de activación de descuento
+ * Cuerpo esperado para la petición de activación de descuentos
  */
 export interface ActivateDiscountBody {
   token: string;
