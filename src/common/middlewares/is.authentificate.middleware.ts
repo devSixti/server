@@ -2,6 +2,7 @@ import { ExpressController, Status } from "../../common/types";
 import { ErrorMsg } from "../../common/utils";
 import { UserModel } from "../../users/models";
 import { verifyToken } from "../utils/generate.jwt.utils";
+import { isBlacklisted } from "../../common/token/tokenBlacklist";
 
 /**
  * Middleware de autenticación.
@@ -31,14 +32,18 @@ export const isAuth: ExpressController = async (req, res, next) => {
 
     console.log("[AUTH] Payload decodificado completo:", payload);
 
-    const { id } = payload;
+    const { id, jti } = payload;
 
-    if (!id) {
-      console.error("[AUTH] ID no presente en el payload:", payload);
-      throw new ErrorMsg(
-        "Tu token no es válido. No pudimos encontrar tu ID de usuario.",
-        401
-      );
+    if (!id || !jti) {
+      console.error("[AUTH] Payload incompleto:", payload);
+      throw new ErrorMsg("Token inválido: falta ID o jti", 401);
+    }
+
+    // Verificar si el token está en la blacklist
+    const blacklisted = await isBlacklisted(jti);
+    if (blacklisted) {
+      console.warn("[AUTH] Token revocado (en blacklist):", jti);
+      throw new ErrorMsg("Token revocado. Inicia sesión nuevamente", 401);
     }
 
     console.log("[AUTH] Buscando usuario con ID:", id);

@@ -63,6 +63,12 @@ const userSchema = new Schema<User>(
       ref: "Device",
       required: false,
     },
+
+    refresh_token: {
+      type: String,
+      required: false, 
+      default: undefined,
+    },
   },
   { timestamps: true }
 );

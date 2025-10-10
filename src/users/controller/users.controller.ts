@@ -33,11 +33,17 @@ export class UserController {
    * Logout
    */
   static logout = catchAsync(async (req: Request, res: Response) => {
-    const { token } = req.body;
-    const result = await AuthService.logout(token);
+    const refreshToken = req.body.refreshToken || req.headers['x-refresh-token'];
+    const authHeader = req.headers["authorization"];
+    const accessToken =
+      authHeader && authHeader.toString().startsWith("Bearer ")
+        ? authHeader.toString().replace("Bearer ", "")
+        : undefined;
+
+    const result = await AuthService.logout(refreshToken, accessToken);
     res.status(200).json({
       status: "success",
-      message: "Sesión cerrada correctamente",
+      message: result.message,
       data: result,
       timestamp: new Date().toISOString(),
     });
@@ -63,7 +69,7 @@ export class UserController {
   static calificateUser = catchAsync(async (req: Request, res: Response) => {
     const { tripId } = req.params;
     const { comment, rating } = req.body;
-    const userId = req.uid; 
+    const userId = req.uid;
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -91,6 +97,23 @@ export class UserController {
     const driverId = req.driver_uid;
     const result = await UserService.getUserProfile(userId, driverId);
     res.json({ status: "success", data: result });
+  });
+
+  /**
+   * Renovar tokens (access + refresh) usando refresh token
+   */
+  static refreshToken = catchAsync(async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    const tokens = await AuthService.refreshTokens(refreshToken);
+
+    res.status(200).json({
+      status: "success",
+      message: "Tokens renovados correctamente",
+      data: {
+        token: tokens,
+      },
+      timestamp: new Date().toISOString(),
+    });
   });
 
   /**

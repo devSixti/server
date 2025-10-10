@@ -35,4 +35,5 @@ export interface User {
   device?: Device;
   discounts?: Discount[];
   califications?: Califications[];
+  refresh_token?: string;
 }
