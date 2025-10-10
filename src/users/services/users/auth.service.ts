@@ -95,21 +95,24 @@ export const AuthService = {
    */
   refreshTokens: async (refreshToken: string) => {
     if (!refreshToken) throw new ErrorMsg("Refresh token requerido", 400);
-
     const payloadR = verifyToken(refreshToken, "refresh");
-    const { id: userId, jti: oldRefreshJti } = payloadR;
+    const { id: userId, jti: oldRefreshJti, exp } = payloadR;
     if (!userId || !oldRefreshJti) throw new ErrorMsg("Token inválido", 401);
-
     const user = await UserModel.findById(userId);
     if (!user) throw new ErrorMsg("Usuario no encontrado", 404);
     if (user.refresh_token !== refreshToken) {
       throw new ErrorMsg("Refresh token inválido", 401);
     }
-
+    // Calcular TTL restante en segundos para el refresh token viejo
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = exp ? exp - now : 0;
+    // Revocar refresh token viejo agregándolo a blacklist
+    if (ttl > 0) {
+      await addToBlacklist(oldRefreshJti, ttl);
+    }
     // Generar nuevos tokens
     const { accessToken, refreshToken: newRefreshToken, accessJti, refreshJti } =
       generateTokens({ id: userId });
-
     // Guardar nuevo refresh token en BD
     await UserModel.findByIdAndUpdate(userId, {
       refresh_token: newRefreshToken,
@@ -123,35 +126,35 @@ export const AuthService = {
    */
   logout: async (refreshToken: string, accessToken?: string) => {
     if (!refreshToken) throw new ErrorMsg("Refresh token requerido para logout", 400);
-
     const payloadR = verifyToken(refreshToken, "refresh");
     const { id: userId, jti: refreshJti } = payloadR;
     if (!userId || !refreshJti) throw new ErrorMsg("Token inválido", 401);
-
     const user = await UserModel.findById(userId);
     if (!user) throw new ErrorMsg("Usuario no encontrado", 404);
     if (user.refresh_token !== refreshToken) {
       throw new ErrorMsg("Refresh token inválido", 401);
     }
-
-    // Borrar refresh token del usuario
     user.refresh_token = undefined;
     await user.save();
-
-    // Si nos enviaron access token, revocarlo
+    console.log("✅ [logout] Refresh token eliminado para usuario:", userId);
     if (accessToken) {
       const payloadA = verifyToken(accessToken, "access");
+      console.log("[LOGOUT] Payload access token:", payloadA);
       if (payloadA.jti) {
         const now = Math.floor(Date.now() / 1000);
-        // exp viene en segundos
         const exp = (payloadA as any).exp;
         const timeLeft = exp ? exp - now : 0;
+        console.log("[LOGOUT] JTI a revocar:", payloadA.jti, "TTL:", timeLeft);
         if (timeLeft > 0) {
           await addToBlacklist(payloadA.jti, timeLeft);
+          console.log("🛑 [logout] Access token revocado y agregado a blacklist.");
+        } else {
+          console.warn("⚠️ [logout] TTL inválido, no se guarda en blacklist.");
         }
+      } else {
+        console.warn("⚠️ [logout] Access token no tiene jti.");
       }
     }
-
     return { message: "Logout exitoso" };
   },
 

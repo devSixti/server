@@ -35,11 +35,13 @@ export class UserController {
   static logout = catchAsync(async (req: Request, res: Response) => {
     const refreshToken = req.body.refreshToken || req.headers['x-refresh-token'];
     const authHeader = req.headers["authorization"];
-    const accessToken =
-      authHeader && authHeader.toString().startsWith("Bearer ")
-        ? authHeader.toString().replace("Bearer ", "")
-        : undefined;
+    let accessToken = authHeader && authHeader.toString().startsWith("Bearer ")
+      ? authHeader.toString().replace("Bearer ", "")
+      : undefined;
 
+    if (!accessToken) {
+      accessToken = req.headers["x-token"]?.toString();
+    }
     const result = await AuthService.logout(refreshToken, accessToken);
     res.status(200).json({
       status: "success",

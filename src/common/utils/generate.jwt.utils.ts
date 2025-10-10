@@ -2,11 +2,13 @@ import { envValues } from "../../common/config";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+import { JwtPayload } from "jsonwebtoken";
 
-interface AuthPayload {
+interface AuthPayload extends JwtPayload {
   id?: string | Types.ObjectId;
   jti?: string;
 }
+
 
 const generateToken = (
   payload: AuthPayload,
@@ -30,20 +32,20 @@ export const generateTokens = (
     throw new Error("JWT secrets no definidos en envValues");
   }
 
-  const accessJti = uuidv4(); 
+  const accessJti = uuidv4();
   const refreshJti = uuidv4();
 
   const accessToken = generateToken(
-    { id: payload.id },
+    { id: payload.id, jti: accessJti },
     access_token_secret,
     options?.accessExpiresIn ?? "10m",
     accessJti
   );
 
   const refreshToken = generateToken(
-    { id: payload.id },
+    { id: payload.id, jti: refreshJti }, 
     refresh_token_secret,
-    options?.refreshExpiresIn ?? "7d",
+    options?.refreshExpiresIn ?? "10d",
     refreshJti
   );
 
