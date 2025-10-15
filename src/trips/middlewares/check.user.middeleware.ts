@@ -4,7 +4,7 @@ import { UserModel } from "../../users/models";
 
 // Definición de una interfaz que extiende Request para incluir el campo `uid`
 interface AuthenticatedRequest extends Request {
-  uid?: string; 
+  uid?: string;
 }
 // Middleware `checkUser` para verificar que el usuario esté autenticado y su información sea válida
 export const checkUser = async (
@@ -23,23 +23,19 @@ export const checkUser = async (
     if (!user) {
       throw new ErrorMsg("Usuario no encontrado", 404);
     }
-    // Verificar si el usuario tiene información incompleta en su perfil
+    // Solo se validan nombre, apellido y número de teléfono
     if (
       !user.first_name?.trim() ||
-      !user.last_name?.trim() || 
-      !user.email?.address?.trim() ||  
-      !user.phone?.number?.trim() 
+      !user.last_name?.trim() ||
+      !user.phone?.number?.trim()
     ) {
       throw new ErrorMsg(
-        "La información del usuario está incompleta. Por favor complete su perfil.",
+        "La información del usuario está incompleta. Por favor complete su nombre, apellido y número de teléfono.",
         403
       );
     }
-    // Verificar si el correo electrónico del usuario es nulo o indefinido
-    if (user.email?.address === null || user.email?.address === undefined) {
-      throw new ErrorMsg("Email es obligatorio.", 400); 
-    }
     next();
-  } catch (error) {    next(error);
+  } catch (error) {
+    next(error);
   }
 };

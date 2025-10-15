@@ -10,7 +10,7 @@ router.post("/accept-conditions", walletControllers.DriverWalletController.accep
 // Agregar fondos
 router.post("/add-funds", walletControllers.DriverWalletController.addFunds);
 // Consultar balance
-router.get("/wallet/balance/:reference", walletControllers.DriverWalletController.getBalance);
+router.get("/balance/:reference", walletControllers.DriverWalletController.getBalance);
 // Métodos de pago
 router.post("/payment-methods", walletControllers.DriverWalletController.addPaymentMethod);
 router.get("/payment-methods", walletControllers.DriverWalletController.getPaymentMethodsByDriverId);

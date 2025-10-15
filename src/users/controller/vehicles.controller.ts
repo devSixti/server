@@ -1,70 +1,78 @@
 import { Request, Response, NextFunction } from "express";
 import { assignVehicle } from "../services/vehicles/assign.vehicle.services";
-import { addOrUpdateVehicle, deleteVehicleById, getDriverVehicle, } from "../services/vehicles/vehicle.service";
+import {
+  addOrUpdateVehicle,
+  getDriverVehicle,
+  deleteVehicleById
+} from "../services/vehicles/vehicle.service";
+import { DeleteRequestService } from "../../admin/services";
 
 /**
- * catchAsync
- * Wrapper para manejar errores de forma centralizada en controladores async
+ * catchAsync: helper para manejar errores async
  */
 const catchAsync =
   (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
 /**
- * Controlador encargado de manejar todas las operaciones relacionadas
- * con vehículos asignados a conductores.
+ * Controlador encargado de manejar todas las operaciones relacionadas con vehículos de conductores.
  */
 export class DriverVehicleController {
-  /**
-   * Asigna un vehículo autorizado a un conductor
-   * URL: PUT /drivers/:driverId/vehicles/:vehicleId/assign
-   */
   static assignVehicle = catchAsync(async (req: Request, res: Response) => {
     const driverId = req.driver_uid;
-    const { vehicleId } = req.body
-    if (!driverId) {
-      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
-    }
-    if (!vehicleId) {
+    const { vehicleId } = req.body;
+    if (!driverId)
+      return res
+        .status(401)
+        .json({ message: "Usuario no autenticado o sin conductor asignado" });
+
+    if (!vehicleId)
       return res.status(400).json({ message: "vehicleId es requerido" });
-    }
+
     const result = await assignVehicle(driverId, vehicleId);
     res.json({ status: "success", data: result });
   });
 
-  /**
-   * Agrega o actualiza un vehículo de un conductor
-   * URL: POST /drivers/:driverId/vehicles
-   */
   static addOrUpdateVehicle = catchAsync(async (req: Request, res: Response) => {
     const driverId = req.driver_uid;
-    if (!driverId) {
-      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
-    }
+    if (!driverId)
+      return res
+        .status(401)
+        .json({ message: "Usuario no autenticado o sin conductor asignado" });
+
     const { vehicleId, ...newVehicleInfo } = req.body;
     const result = await addOrUpdateVehicle({ driverId, vehicleId, newVehicleInfo });
     res.json({ status: "success", data: result });
   });
 
   /**
-   * Elimina un vehículo específico de un conductor
-   * URL: DELETE /drivers/:driverId/vehicles/:vehicleId
+   * Solicita eliminación de un vehículo (no lo borra directamente)
+   * URL: DELETE /drivers/:driverId/vehicles/:vehicleId BODY: { reason: string }
    */
   static deleteVehicleById = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.uid;
     const { vehicleId } = req.params;
-    const result = await deleteVehicleById(vehicleId);
-    res.json({ status: "success", data: result });
+    const { reason } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        message: "Debes proporcionar un motivo válido (mínimo 5 caracteres)",
+      });
+    }
+    const result = await deleteVehicleById(userId, vehicleId, reason);
+    res.status(201).json(result);
   });
 
-  /**
-   * Obtiene todos los vehículos de un conductor
-   * URL: GET /drivers/:driverId/vehicles
-   */
   static getDriverVehicle = catchAsync(async (req: Request, res: Response) => {
     const driverId = req.driver_uid;
-    if (!driverId) {
-      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
-    }
+    if (!driverId)
+      return res
+        .status(401)
+        .json({ message: "Usuario no autenticado o sin conductor asignado" });
+
     const result = await getDriverVehicle(driverId);
     res.json({ status: "success", data: result });
   });
