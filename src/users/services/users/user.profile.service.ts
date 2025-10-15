@@ -73,15 +73,17 @@ export const UserProfileService = {
     );
 
     // Generar descuento
+    /*
     const { message, haveNewDiscount } = await discountsServices.generateDiscount({
       user: userToUpdate,
       type: "emergencyContactChange",
       status: true,
     });
+     */
 
     return {
-      message: message ? ["Usuario actualizado", message] : "Usuario actualizado",
-      info: { haveNewDiscount, user: userUpdated },
+      message: /* message ? ["Usuario actualizado", message] : */ "Usuario actualizado",
+      info: { /* haveNewDiscount, */ user: userUpdated },
     };
   },
 
@@ -138,18 +140,20 @@ export const UserProfileService = {
     });
 
     // Generar descuento
+     /*
     const { message, haveNewDiscount, newDiscount } = await discountsServices.generateDiscount({
       user: userUpdated,
       type: "saveDocumentChange",
       amount: 0.15,
       status: false,
     });
+    */
 
     return {
-      message: ["Documento guardado con éxito", message],
+      message: "Documento guardado con éxito",
       info: {
         isSendNotification,
-        haveNewDiscount: newDiscount ? haveNewDiscount : false,
+        /* haveNewDiscount: newDiscount ? haveNewDiscount : false, */
         user: userUpdated,
       },
     };

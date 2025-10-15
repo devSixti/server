@@ -1,8 +1,8 @@
 import { ErrorMsg, generateTokens, extractPayload } from "../../../common/utils";
 import { UserModel } from "../../models";
 import { discountsServices, commonServices } from "..";
-import { updateEmailBody } from "../../../common/email";
-import { verifyEmailBody } from "../../emails";
+import { updateEmailBody } from "../../../emails";
+import { verifyEmailBody } from "../../../emails";
 
 export const UserEmailService = {
   /**
@@ -15,16 +15,18 @@ export const UserEmailService = {
   }) => {
     const { userId, email, emailConfirmation } = params;
 
+     //  Validar coincidencia de correos
     if (email !== emailConfirmation) {
       throw new ErrorMsg(
         "El email y la confirmación no coinciden. Verifica e inténtalo nuevamente.",
         400
       );
     }
-
+   // Verificar existencia del usuario
     const userToUpdate = await UserModel.findById(userId).populate("discounts");
     if (!userToUpdate) throw new ErrorMsg("Usuario no encontrado", 404);
 
+    // Actualizar email (aún no verificado)
     const userUpdated = await UserModel.findByIdAndUpdate(
       userId,
       { email: { address: email, verified: false } },
@@ -34,6 +36,11 @@ export const UserEmailService = {
     if (!userUpdated)
       throw new ErrorMsg("Error al actualizar el email del usuario.", 500);
 
+      // =====================================================
+     //  DESCUENTO EN STAND-BY - Pendiente de decisión
+     // =====================================================
+     /*
+
     const { message, haveNewDiscount, newDiscount } =
       await discountsServices.generateDiscount({
         user: userToUpdate,
@@ -42,49 +49,59 @@ export const UserEmailService = {
         status: false,
       });
 
+       */
+
+     // Generar token para verificación del nuevo email
     const { accessToken: emailVerificationToken } = await generateTokens(
       { id: userUpdated._id.toString() },
-      { accessExpiresIn: 2592000 }
+      { accessExpiresIn: 2592000 } // 30 días (en segundos)
     );
 
+    // Enviar correo de verificación
     await commonServices.sendEmail({
       to: email,
       subject: "Verifica tu nueva dirección de correo",
       htmlBody: verifyEmailBody({ email, token: emailVerificationToken }),
     });
 
-    let discountToken: string | undefined;
-    let isEmailSended = false;
-    let isSendNotification = false;
+      // Enviar notificación al dispositivo 
+    const isSendNotification = await commonServices.sendNotificationToDevice({
+    tokenDevice: userUpdated.device?.token ?? "",
+    title: "Validación de correo",
+    description: "Hemos enviado un correo para validar tu dirección.",
+   });
 
-    if (newDiscount && newDiscount._id) {
-      const { accessToken: discountToken } = await generateTokens(
-        { id: newDiscount._id.toString() },
-        { accessExpiresIn: 2592000 }
-      );
+   // =====================================================
+   //  SECCIÓN DE DESCUENTO STAND-BY
+   // =====================================================
+   /*
+   let discountToken: string | undefined;
+   let isEmailSended = false;
 
-      isEmailSended = await commonServices.sendEmail({
-        to: email,
-        subject: "Confirmación: Tu correo ha sido actualizado",
-        htmlBody: updateEmailBody({ email, token: discountToken }),
-      });
+   if (newDiscount && newDiscount._id) {
+    const { accessToken: discountToken } = await generateTokens(
+      { id: newDiscount._id.toString() },
+      { accessExpiresIn: 2592000 }
+    );
 
-      isSendNotification = await commonServices.sendNotificationToDevice({
-        tokenDevice: userUpdated.device?.token ?? "",
-        title: "Validación de correo",
-        description: "Hemos enviado un correo para validar tu dirección.",
-      });
-    }
-
-    return {
-      message: [`Email actualizado a ${userUpdated.email?.address}.`, message],
-      info: {
-        isSendNotification,
-        isEmailSended,
-        haveNewDiscount,
-        discountToken,
-        userUpdated,
-        emailVerificationToken,
+    isEmailSended = await commonServices.sendEmail({
+      to: email,
+      subject: "Confirmación: Tu correo ha sido actualizado",
+      htmlBody: updateEmailBody({ email, token: discountToken }),
+    });
+   }
+   */
+  
+   // Respuesta final
+     return {
+     message: `Email actualizado a ${userUpdated.email?.address}.`,
+     info: {
+      isSendNotification,
+      // haveNewDiscount, // Stand-by
+      // discountToken,   // Stand-by
+      userUpdated,
+      emailVerificationToken,
+  
       },
     };
   },

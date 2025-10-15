@@ -34,8 +34,8 @@ adminRoutes.delete("/users/:userId", UserController.deactivate);
 adminRoutes.get("/drivers", DriverController.getAll);
 // Busca conductores: GET /admin/drivers/search
 adminRoutes.get("/drivers/search", DriverController.search);
-// Aprueba un conductor: PUT /admin/drivers/:driverId/approve
-adminRoutes.put("/drivers/:driverId/approve", DriverController.approve);
+//Aprueba un conductor: PATCH /admin/drivers/:driverId/approve
+adminRoutes.patch("/drivers/:driverId/approve", DriverController.approve);
 // Desactiva un conductor: DELETE /admin/drivers/:id
 adminRoutes.delete("/drivers/:id", DriverController.desactivate);
 
