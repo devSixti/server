@@ -14,14 +14,12 @@ const vehicleSchema = new Schema<Vehicle>(
       required: true,
       enum: Object.values(VehicleType),
     },
-
     services: {
       type: [String],
       default: [ServiceType.standard],
       required: false,
       trim: true,
     },
-
     plates: {
       type: String,
       required: false,
@@ -31,100 +29,32 @@ const vehicleSchema = new Schema<Vehicle>(
       match: [/^[A-Za-z0-9]{1,7}$/, "El número de placa no es válido"],
     },
     property_card: {
-      front_picture: {
-        type: String,
-        required: false,
-        trim: true,
-      },
-      back_picture: {
-        type: String,
-        required: false,
-        trim: true,
-      },
-      verified: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+      front_picture: String,
+      back_picture: String,
+      verified: { type: Boolean, default: false },
     },
     mandatory_insurance: {
-      picture: {
-        type: String,
-        required: false,
-      },
-      expiration_date: {
-        type: Date,
-        required: false,
-      },
-      verified: {
-        type: Boolean,
-        required: true,
-        default: false,
-      },
+      picture: String,
+      expiration_date: Date,
+      verified: { type: Boolean, default: false },
     },
     technical_mechanical: {
-      picture: {
-        type: String,
-        required: false,
-      },
-      expiration_date: {
-        type: Date,
-        required: false,
-      },
-      verified: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+      picture: String,
+      expiration_date: Date,
+      verified: { type: Boolean, default: false },
     },
-
     pictures: {
-      front_picture: {
-        type: String,
-        required: false,
-        trim: true,
-      },
-      back_picture: {
-        type: String,
-        required: false,
-        trim: true,
-      },
-      inside_picture: {
-        type: String,
-        required: false,
-        trim: true,
-      },
+      front_picture: String,
+      back_picture: String,
+      inside_picture: String,
     },
-    brand: {
-      type: String,
-      required: false,
-      trim: false,
-    },
-    model: {
-      type: String,
-      required: false,
-      trim: false,
-      min: 1886,
-      max: new Date().getFullYear(),
-    },
-    year: {
-      type: Number,
-      required: false,
-      trim: true,
-    },
-    color: {
-      type: String,
-      required: false,
-      trim: true,
-    },
-    capacity: {
-      type: Number,
-      required: false,
-      min: 0,
-    },
+    brand: String,
+    model: String,
+    year: Number,
+    color: String,
+    capacity: Number,
     fuel_type: {
       type: String,
-      required: false,
       enum: Object.values(FuelType),
       default: "gasoline",
     },
@@ -132,6 +62,20 @@ const vehicleSchema = new Schema<Vehicle>(
       type: String,
       enum: Object.values(Status),
       default: Status.NOT_REQUESTED,
+    },
+
+    // 🔹 Mantiene trazabilidad de solicitud de eliminación
+    delete_request: {
+      requested: { type: Boolean, default: false },
+      reason: { type: String, trim: true },
+      requested_at: { type: Date },
+      reviewed_by: { type: Schema.Types.ObjectId, ref: "Admins" },
+      reviewed_at: { type: Date },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected", "cancelled"],
+        default: "pending",
+      },
     },
   },
   { timestamps: true }

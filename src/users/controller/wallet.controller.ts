@@ -22,7 +22,10 @@ export class DriverWalletController {
    * Acepta términos y condiciones para un conductor
    */
   static acceptConditions = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
     const result = await acceptConditions(driverId);
     res.json({ status: "success", data: result });
   });
@@ -32,7 +35,10 @@ export class DriverWalletController {
    * Agrega fondos a la billetera del conductor
    */
   static addFunds = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
     const result = await addFunds(driverId, req.body);
     res.json({ status: "success", data: result });
   });
@@ -52,7 +58,10 @@ export class DriverWalletController {
    * Agrega un nuevo método de pago para un conductor
    */
   static addPaymentMethod = catchAsync(async (req: Request, res: Response) => {
-    const { driverId } = req.params;
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
+    }
     const result = await addPaymentMethod(driverId, req.body);
     res.json({ status: "success", data: result });
   });
@@ -61,11 +70,12 @@ export class DriverWalletController {
    * URL: GET /drivers/:driverId/payment-methods
    * Obtiene todos los métodos de pago de un conductor
    */
-  static getPaymentMethodsByDriverId = catchAsync(
-    async (req: Request, res: Response) => {
-      const { driverId } = req.params;
-      const result = await getPaymentMethodsByDriverId(driverId);
-      res.json({ status: "success", data: result });
+  static getPaymentMethodsByDriverId = catchAsync(async (req: Request, res: Response) => {
+    const driverId = req.driver_uid;
+    if (!driverId) {
+      return res.status(401).json({ message: "Usuario no autenticado o sin conductor asignado" });
     }
-  );
+    const result = await getPaymentMethodsByDriverId(driverId);
+    res.json({ status: "success", data: result });
+  });
 }

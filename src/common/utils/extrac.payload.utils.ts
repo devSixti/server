@@ -14,13 +14,17 @@ export const extractPayload = (token: string): any => {
     }
     return verifyToken(token, "access");
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      throw new ErrorMsg("Tu token ha expirado. Por favor, inicia sesión nuevamente.", 401);
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      throw new ErrorMsg("Token inválido. Proporciona un token de acceso válido.", 401);
-    } else if (error instanceof jwt.NotBeforeError) {
-      throw new ErrorMsg("El token aún no está activo. Verifica el periodo de validez del token.", 401);
-    }
-    throw new ErrorMsg("Ocurrió un error al verificar el token.", 500);
+  console.error("[extractPayload] Error al verificar token:", error);
+
+  if (error instanceof jwt.TokenExpiredError) {
+    throw new ErrorMsg("Tu token ha expirado. Por favor, inicia sesión nuevamente.", 401);
+  } else if (error instanceof jwt.JsonWebTokenError) {
+    throw new ErrorMsg("Token inválido. Proporciona un token de acceso válido.", 401);
+  } else if (error instanceof jwt.NotBeforeError) {
+    throw new ErrorMsg("El token aún no está activo. Verifica el periodo de validez del token.", 401);
   }
+
+  throw new ErrorMsg("Ocurrió un error al verificar el token.", 500);
+}
+
 };

@@ -12,8 +12,7 @@ app.use(express.json());
 
 app.set("trust proxy", 1);
 
-// Aquí montamos las rutas
-app.use("/users", usersRoutes);            // antes era "access"
+app.use("/users", usersRoutes);          
 app.use("/drivers", isAuth, driversRoutes);
 app.use("/discounts", discountRoutes);
 app.use("/wallet", isAuth, checkDriver, walletRoutes);

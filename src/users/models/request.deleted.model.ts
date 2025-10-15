@@ -1,7 +1,9 @@
 import { Schema, model, Types, Document } from "mongoose";
 
 export interface IDeleteRequest extends Document {
+  type: "user" | "vehicle";
   user_id: Types.ObjectId;
+  vehicle_id?: Types.ObjectId;
   reason: string;
   status: "pending" | "approved" | "rejected";
   requested_at: Date;
@@ -14,15 +16,28 @@ export interface IDeleteRequest extends Document {
 
 const deleteRequestSchema = new Schema<IDeleteRequest>(
   {
+    type: {
+      type: String,
+      enum: ["user", "vehicle"],
+      required: true,
+    },
     user_id: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
+    },
+    vehicle_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Vehicles",
+      required: function (this: IDeleteRequest) {
+        return this.type === "vehicle";
+      },
     },
     reason: {
       type: String,
-      default: "El usuario ha solicitado la eliminación de su cuenta.",
+      required: [true, "El motivo de eliminación es obligatorio"],
+      minlength: [5, "El motivo debe tener al menos 5 caracteres"],
+      trim: true,
     },
     status: {
       type: String,
@@ -33,18 +48,22 @@ const deleteRequestSchema = new Schema<IDeleteRequest>(
       type: Date,
       default: Date.now,
     },
-    reviewed_at: {
-      type: Date,
-    },
+    reviewed_at: Date,
     reviewed_by: {
       type: Types.ObjectId,
-      ref: "Admin",
+      ref: "Admins",
     },
-    response_message: {
-      type: String,
-    },
+    response_message: String,
   },
   { timestamps: true }
+);
+
+deleteRequestSchema.index(
+  { user_id: 1, type: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "pending" },
+  }
 );
 
 export const DeleteRequestModel = model<IDeleteRequest>(

@@ -5,6 +5,7 @@ import { PaginationDto, SearchParamsDto } from "../../common/dto";
 import { AsyncCustomResponse, Status } from "../../common/types";
 import { ErrorMsg, paginationResults } from "../../common/utils";
 import { validateField } from "../../common/helpers";
+import { RoleModel } from "../../users/models";
 
 export class DriverService {
   /**
@@ -35,37 +36,37 @@ export class DriverService {
 
       // Validaciones de campos obligatorios
       const validations: [string | null, string][] = [
-        [
-          driver.user_info?.document?.document_id ?? null,
-          "Falta documento de identidad",
-        ],
-        [
-          driver.license.front_picture ?? null,
-          "Falta foto frontal de licencia",
-        ],
+        [driver.user_info?.document?.document_id ?? null, "Falta documento de identidad"],
+        [driver.license.front_picture ?? null, "Falta foto frontal de licencia"],
         [
           driver.license.expiration_date
             ? driver.license.expiration_date.toISOString()
             : null,
           "Falta fecha de vencimiento",
         ],
-        [
-          driver.criminal_background.picture ?? null,
-          "Falta antecedentes penales",
-        ],
+        [driver.criminal_background.picture ?? null, "Falta antecedentes penales"],
       ];
 
       // Recorre cada validación y lanza error si algún campo es nulo o vacío
       validations.forEach(([field, msg]) => validateField(field, msg));
 
-      // Actualiza el documento del usuario para marcarlo como verificado
+      // Buscar el role "driver"
+      const driverRole = await RoleModel.findOne({ name: "driver" });
+      if (!driverRole) {
+        throw new ErrorMsg("Rol 'driver' no encontrado en la base de datos.", 500);
+      }
+
+      // Actualizar el usuario con documento verificado y role_id
       await UserModel.findByIdAndUpdate(
         driver.user_info!._id,
-        { "document.verified": true },
+        {
+          "document.verified": true,
+          role_id: driverRole._id,
+        },
         { session }
       );
 
-      // Marca licencias y antecedentes como verificados, activa disponibilidad y cambia el estado
+      // Actualizaciones al modelo de conductor
       driver.license.verified = true;
       driver.criminal_background.verified = true;
       driver.is_available = true;
@@ -84,14 +85,13 @@ export class DriverService {
         subject: "Solicitud aprobada",
         htmlBody: approvedEmailBody(),
       });
-      // Retorna respuesta exitosa
+
       return {
         status: "success",
         message: "Conductor aprobado exitosamente.",
         info: { driver },
       };
     } catch (error) {
-      // Abort de la transacción en caso de error
       await session.abortTransaction();
       session.endSession();
       console.error("Error al aprobar conductor:", error);
@@ -191,15 +191,15 @@ export class DriverService {
         path: "user_info",
         match: {
           $or: [
-            { first_name: { $regex: searchValue, $options: "i" } }, 
+            { first_name: { $regex: searchValue, $options: "i" } },
             { last_name: { $regex: searchValue, $options: "i" } },
-            { nick_name: { $regex: searchValue, $options: "i" } }, 
-            { country: { $regex: searchValue, $options: "i" } }, 
-            { city: { $regex: searchValue, $options: "i" } }, 
+            { nick_name: { $regex: searchValue, $options: "i" } },
+            { country: { $regex: searchValue, $options: "i" } },
+            { city: { $regex: searchValue, $options: "i" } },
             { "document.document_id": { $regex: searchValue, $options: "i" } },
             { "document.type": { $regex: searchValue, $options: "i" } },
-            { "email.address": { $regex: searchValue, $options: "i" } }, 
-            { "phone.country_code": { $regex: searchValue, $options: "i" } }, 
+            { "email.address": { $regex: searchValue, $options: "i" } },
+            { "phone.country_code": { $regex: searchValue, $options: "i" } },
             { "phone.number": { $regex: searchValue, $options: "i" } },
           ],
         },

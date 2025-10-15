@@ -8,7 +8,7 @@ const tripRequestSchema = new Schema<TripRequest>(
     // Referencia al usuario
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true,
     },
     // Ubicación de origen
@@ -81,7 +81,7 @@ tripRequestSchema.index({ "destination.coordinates": "2dsphere" });
 tripRequestSchema.index({ "route.coordinates": "2dsphere" });
 // Virtual para obtener información del usuario
 tripRequestSchema.virtual("user_info", {
-  ref: "Users",
+  ref: "User",
   localField: "user_id",
   foreignField: "_id",
   justOne: true,

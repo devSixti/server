@@ -1,19 +1,18 @@
 import { Router } from "express";
 import { walletControllers } from "../controller";
+import { isAuth } from "../../common/middlewares";
 
 const router = Router();
+router.use(isAuth); 
 
 // Aceptar condiciones
-router.post("/:driverId/accept-conditions", walletControllers.DriverWalletController.acceptConditions);
-
+router.post("/accept-conditions", walletControllers.DriverWalletController.acceptConditions);
 // Agregar fondos
-router.post("/:driverId/wallet/add-funds", walletControllers.DriverWalletController.addFunds);
-
+router.post("/add-funds", walletControllers.DriverWalletController.addFunds);
 // Consultar balance
-router.get("/wallet/balance/:reference", walletControllers.DriverWalletController.getBalance);
-
+router.get("/balance/:reference", walletControllers.DriverWalletController.getBalance);
 // Métodos de pago
-router.post("/:driverId/payment-methods", walletControllers.DriverWalletController.addPaymentMethod);
-router.get("/:driverId/payment-methods", walletControllers.DriverWalletController.getPaymentMethodsByDriverId);
+router.post("/payment-methods", walletControllers.DriverWalletController.addPaymentMethod);
+router.get("/payment-methods", walletControllers.DriverWalletController.getPaymentMethodsByDriverId);
 
 export default router;

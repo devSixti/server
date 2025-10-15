@@ -3,11 +3,11 @@ import { ErrorMsg, extractPayload } from "../../../common/utils";
 import { DiscountModel } from "../../../users/models";
 import { findDiscountOrThrow } from "../../utils/discount.utils";
 
-export const activateNewDiscount = async (
-  token: string
-): AsyncCustomResponse => {
+export const activateNewDiscount = async (token: string): AsyncCustomResponse => {
+  console.log("[DISCOUNT] Token recibido para activar:", token);
   try {
     const { id } = extractPayload(token);
+    console.log("[DISCOUNT] Payload decodificado:", { id });
 
     const discountToUpdate = await findDiscountOrThrow(id);
 

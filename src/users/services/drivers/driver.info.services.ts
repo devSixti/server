@@ -3,13 +3,16 @@ import { AsyncCustomResponse } from "../../../common/types";
 import { ErrorMsg } from "../../../common/utils";
 import { transformVehicleData } from "../../helpers";
 
-export const myDriverRequestInfo = async (driverId: string): AsyncCustomResponse => {
+export const myDriverRequestInfo = async (userId: string): AsyncCustomResponse => {
     try {
-        const driver = await DriverModel.findById(driverId).populate("vehicles").populate("user_info").lean();
+        const driver = await DriverModel.findOne({ user_id: userId })
+            .populate("vehicles")
+            .populate("user_info")
+            .lean();
 
         if (!driver) {
             throw new ErrorMsg("Driver not found", 404);
-        }   
+        }
 
         const vehicles = driver.vehicles ?? [];
         const firstVehicle = vehicles.length > 0
@@ -32,7 +35,7 @@ export const myDriverRequestInfo = async (driverId: string): AsyncCustomResponse
                 },
                 vehicle: transformVehicleData(firstVehicle),
             },
-        }
+        };
     } catch (error) {
         console.error("Error in myDriverRequestInfo: ", error);
         throw error;

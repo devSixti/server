@@ -22,7 +22,7 @@ export const verifyEmailBody = ({ token, email }: VerifyEmailBodyParams): string
         <p>
           Si realizó este cambio, por favor confirme haciendo clic en el botón de abajo:
         </p>
-        <a href="http://localhost:1010/api/access/verify-email/?&token=${token}">
+        <a href="http://localhost:1010/api/users/email/verify/?&token=${token}">
           <button>Confirmar actualización de correo electrónico</button>
         </a>
         <p class="footer-text">

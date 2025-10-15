@@ -7,7 +7,7 @@ const tripSchema = new Schema<Trip>(
     // Referencias a otros documentos
     passenger_id: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true,
     },
     driver_id: {
@@ -59,7 +59,7 @@ tripSchema.virtual("driver", {
 });
 // Virtual para el pasajero del viaje
 tripSchema.virtual("passenger", {
-  ref: "Users",
+  ref: "User",
   localField: "passenger_id",
   foreignField: "_id",
   justOne: true,

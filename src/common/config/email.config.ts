@@ -2,18 +2,19 @@ import nodemailer from "nodemailer";
 import { envValues } from "./env.config";
 
 export const emailServices = () => {
-    const { mailer_email, mailer_service, mailer_secret_key } = envValues
+    const { mailer_email, mailer_service, mailer_secret_key } = envValues;
     const transporter = nodemailer.createTransport({
-        service: mailer_service,
+        service: mailer_service,   
         host: "smtp.gmail.com",
         port: 465,
-        secure: true,
+        secure: true,         
         auth: {
             user: mailer_email,
             pass: mailer_secret_key,
         },
-
+        tls: {
+            rejectUnauthorized: false,
+        }
     });
-
-    return transporter
+    return transporter;
 };

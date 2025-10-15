@@ -98,4 +98,4 @@ userSchema.set("toObject", { virtuals: true });
 userSchema.set("toJSON", { virtuals: true });
 userSchema.index({ current_location: "2dsphere" });
 
-export const UserModel = model<User>("Users", userSchema);
+export const UserModel = model<User>("User", userSchema);
