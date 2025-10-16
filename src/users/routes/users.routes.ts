@@ -12,6 +12,7 @@ router.post("/auth", userControllers.UserController.authOrCreateUser);
 router.post("/logout", userControllers.UserController.logout);
 router.post("/verify-phone", userControllers.UserController.verifyPhone);
 router.get("/email/verify", userControllers.UserController.verifyEmail);
+router.post("/refresh-token", userControllers.UserController.refreshToken);
 
 // ====================
 // Rutas protegidas (requieren token)
